@@ -1,0 +1,2406 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# ============================================================
+#  FireDragon Scanner v4.0 - W.O Edition
+#  Scanner de cheats/modificacoes para Free Fire
+#  Modificado com: W.O Detector, Dominios Suspeitos,
+#  Novas Categorias e Funcionalidades Anti-Cheat
+# ============================================================
+
+import os
+import sys
+import subprocess
+import time
+import json
+import re
+from datetime import datetime
+
+# ============================================================
+#  SECAO 1: CORES ANSI
+# ============================================================
+class C:
+    RESET       = "\033[0m"
+    BOLD        = "\033[1m"
+    DIM         = "\033[2m"
+    UNDERLINE   = "\033[4m"
+    BLACK       = "\033[30m"
+    RED         = "\033[31m"
+    GREEN       = "\033[32m"
+    YELLOW      = "\033[33m"
+    BLUE        = "\033[34m"
+    MAGENTA     = "\033[35m"
+    CYAN        = "\033[36m"
+    WHITE       = "\033[37m"
+    BRIGHT_BLACK    = "\033[90m"
+    BRIGHT_RED      = "\033[91m"
+    BRIGHT_GREEN    = "\033[92m"
+    BRIGHT_YELLOW   = "\033[93m"
+    BRIGHT_BLUE     = "\033[94m"
+    BRIGHT_MAGENTA  = "\033[95m"
+    BRIGHT_CYAN     = "\033[96m"
+    BRIGHT_WHITE    = "\033[97m"
+    BG_BLACK    = "\033[40m"
+    BG_RED      = "\033[41m"
+    BG_GREEN    = "\033[42m"
+    BG_YELLOW   = "\033[43m"
+    BG_BLUE     = "\033[44m"
+    BG_MAGENTA  = "\033[45m"
+    BG_CYAN     = "\033[46m"
+    BG_WHITE    = "\033[47m"
+
+
+# ============================================================
+#  SECAO 2: CONFIGURACOES
+# ============================================================
+FF_PACKAGE      = "com.dts.freefireth"
+FF_PACKAGE_MAX  = "com.dts.freefiremax"
+
+
+# ============================================================
+#  SECAO 3: LISTAS DE APPS SUSPEITOS POR CATEGORIA
+# ============================================================
+
+GAME_MODIFIERS = [
+    "com.gameguardian", "com.game.guardian", "com.lucky.patcher",
+    "com.chelpus.luckypatcher", "com.chelpus.lackypatch",
+    "com.dimonvideo.luckypatcher", "com.jasi2169.platinmods",
+    "com.platinmods", "com.blackmod", "com.modxda",
+    "com.android.vending.billing.InAppBillingService",
+    "com.android.vending.billing.InAppBillingService.LOCK",
+    "com.android.vending.billing.InAppBillingService.COIN",
+    "com.android.vending.billing.InAppBillingService.LUCK",
+    "com.android.vending.billing.InAppBillingService.CLON",
+]
+
+FILE_MANAGERS = [
+    "bin.mt.plus", "bin.mt.plus.canary", "bin.mt.plus.pro",
+    "com.estrongs.android.pop", "com.filemanager.plus",
+    "com.rhmsoft.fm", "com.speedsoftware.rootexplorer",
+    "com.jrummy.root.browser", "com.ghisler.android.TotalCommander",
+     
+    "com.mixplorer", "com.mixplorer.silver",
+    "com.alphainventor.filemanager", "com.lonelycatgames.Xplore",
+]
+
+CLONERS = [
+    "com.parallel.space", "com.parallel.space.pro",
+    "com.dual.space", "com.dual.space.pro",
+    "com.clone.app", "com.clone.app.pro",
+    "com.virtual.space", "com.virtual.space.pro",
+    "com.f1vm.wormhole", "com.f1vm.wormhole.pro",
+    "com.vphonegaga.titan", "com.vphonegaga.titan.pro",
+    "com.x8sandbox.x8", "com.exagear.strategies",
+    "com.lbe.parallel.intl", "com.lbe.parallel",
+    "com.applisto.appcloner", "com.applisto.appcloner.pro",
+    "com.applisto.appcloner.plus", "com.applisto.appcloner.premium",
+]
+
+VPNS = [
+    "com.vpn.free", "com.free.vpn", "com.unlimited.vpn",
+    "com.expressvpn.vpn", "com.nordvpn.android",
+    "com.hidemyass.hidemyassprovpn", "com.privateinternetaccess.android",
+    "com.ubisoft.vpn", "com.cyberghost.android",
+    "com.windscribe.vpn", "com.surfshark.vpn",
+    "com.protonvpn.android", "com.tunnelbear.android",
+    "com.hotspotshield.android", "com.hola.vpn",
+    "com.psiphon3", "com.orpheusdroid.screenrecorder",
+    "com.ludashi.superboost", "com.gameloop.super",
+]
+
+FAKE_APPS = [
+    "com.nu.production.fake", "com.nu.production.clone",
+    "com.itau.fake", "com.itau.clone",
+    "com.bradesco.fake", "com.bradesco.clone",
+    "com.santander.br.fake", "com.santander.br.clone",
+    "com.bb.android.fake", "com.bb.android.clone",
+    "com.c6bank.app.fake", "com.c6bank.app.clone",
+    "com.intermedium.fake", "com.intermedium.clone",
+    "com.original.bank.fake", "com.original.bank.clone",
+    "com.picpay.fake", "com.picpay.clone",
+    "com.mercadopago.wallet.fake", "com.mercadopago.wallet.clone",
+    "com.paypal.android.p2pmobile.fake", "com.paypal.android.p2pmobile.clone",
+    "com.whatsapp.fake", "com.whatsapp.clone",
+    "com.instagram.android.fake", "com.instagram.android.clone",
+    "com.facebook.katana.fake", "com.facebook.katana.clone",
+    "com.twitter.android.fake", "com.twitter.android.clone",
+    "com.spotify.music.fake", "com.spotify.music.clone",
+    "com.netflix.mediaclient.fake", "com.netflix.mediaclient.clone",
+    "com.google.android.youtube.fake", "com.google.android.youtube.clone",
+    "com.zhiliaoapp.musically.fake", "com.zhiliaoapp.musically.clone",
+    "com.snapchat.android.fake", "com.snapchat.android.clone",
+    "com.discord.fake", "com.discord.clone",
+    "com.ubercab.fake", "com.ubercab.clone",
+    "com.google.android.apps.maps.fake", "com.google.android.apps.maps.clone",
+]
+
+EMULATORS = [
+    "com.gameloop.android", "com.tencent.ig",
+    "com.bluestacks.appplayer", "com.bluestacks.nougat64",
+    "com.ldplayer.tw", "com.ldplayer.three",
+    "com.memu.play", "com.nox.mg",
+    "com.genymotion", "com.android.emulator",
+]
+
+FF_CHEATS = [
+    "com.dts.freefirecheat", "com.exploits.freefire",
+    "com.mod.freefire", "com.hack.freefire",
+    "com.aimbot.freefire", "com.wallhack.freefire",
+    "com.esp.freefire", "com.speedhack.freefire",
+    "com.modmenu.freefire", "com.autohead.freefire",
+    "com.antena.freefire", "com.teleport.freefire",
+    "com.fly.freefire", "com.godmode.freefire",
+    "com.norecoil.freefire", "com.antiban.freefire",
+    "com.unlimited.freefire", "com.diamond.freefire",
+    "com.coin.freefire", "com.generator.freefire",
+    "com.script.freefire", "com.lua.freefire",
+    "com.gg.freefire", "com.injector.freefire",
+    "com.patcher.freefire", "com.memory.freefire",
+    "com.ram.freefire", "com.booster.freefire",
+    "com.tweaker.freefire", "com.config.freefire",
+    "com.settings.freefire", "com.resolution.freefire",
+    "com.graphics.freefire", "com.sensitivity.freefire",
+    "com.aim.freefire", "com.recoil.freefire",
+    "com.damage.freefire", "com.health.freefire",
+    "com.armor.freefire", "com.speed.freefire",
+    "com.jump.freefire", "com.root.freefire",
+    "com.bypass.freefire", "com.bypasser.freefire",
+    "com.crack.freefire", "com.cracked.freefire",
+    "com.premium.freefire", "com.unlocked.freefire",
+    "com.pro.freefire", "com.vip.freefire",
+    "com.gold.freefire", "com.gems.freefire",
+    "com.coins.freefire", "com.money.freefire",
+    "com.cash.freefire", "com.free.freefire",
+    "com.infinite.freefire", "com.mega.freefire",
+    "com.super.freefire", "com.ultra.freefire",
+    "com.extreme.freefire", "com.ultimate.freefire",
+    "com.max.freefire", "com.plus.freefire",
+    "com.extra.freefire", "com.bonus.freefire",
+    "com.special.freefire", "com.rare.freefire",
+    "com.legendary.freefire", "com.mythic.freefire",
+    "com.epic.freefire", "com.heroic.freefire",
+    "com.divine.freefire", "com.immortal.freefire",
+]
+
+ROOT_APPS = [
+    "com.topjohnwu.magisk", "com.topjohnwu.magisk.stub",
+    "com.koushikdutta.superuser", "com.koushikdutta.rommanager",
+    "com.keramidas.TitaniumBackup", "com.keramidas.TitaniumBackupPro",
+    "com.speedsoftware.rootexplorer", "com.jrummy.root.browser",
+    "com.jrummy.busybox.installer", "com.jrummy.busybox.pro",
+    "stericson.busybox", "stericson.busybox.donate",
+    "com.devadvance.rootcloak", "com.devadvance.rootcloakplus",
+    "com.formyhm.hideroot", "com.amphoras.hidemyroot",
+    "com.saurik.substrate", "com.saurik.substrate.ex",
+    "de.robv.android.xposed.installer", "com.solohsu.android.edxp.manager",
+    "org.meowcat.edxposed.manager", "com.android.vending.billing.InAppBillingService",
+]
+
+SCRIPT_APPS = [
+    "com.autojs", "com.autojs.pro", "com.stardust.autojs",
+    "com.touchsprite.android", "com.touchsprite",
+    "com.script.autoclicker", "com.autoclicker",
+    "com.macrorify", "com.clickassistant",
+    "com.autoinput", "com.tasker", "net.dinglisch.android.taskerm",
+]
+
+MEMORY_MODS = [
+    "com.gameguardian", "com.cheatengine", "com.memoryeditor",
+    "com.hexedit", "com.rehex", "com.sbman.cheat",
+    "com.d2dyno.cheat", "com.freedom", "com.freedom.apk",
+]
+
+INJECTOR_APPS = [
+    "com.injector", "com.dllinjector", "com.processhacker",
+    "com.libinjector", "com.soinjector", "com.runtimeinjection",
+]
+
+ALL_SUSPECT_APPS = (
+    GAME_MODIFIERS + FILE_MANAGERS + CLONERS + VPNS +
+    FAKE_APPS + EMULATORS + FF_CHEATS + ROOT_APPS +
+    SCRIPT_APPS + MEMORY_MODS + INJECTOR_APPS
+)
+
+
+# ============================================================
+#  SECAO 4: PALAVRAS-CHAVE SUSPEITAS
+# ============================================================
+SUSPECT_KEYWORDS = [
+    "aimbot", "wallhack", "speedhack", "modmenu", "esp",
+    "norecoil", "antiban", "hack", "cheat", "mod",
+    "autohead", "antena", "teleport", "fly", "godmode",
+    "unlimited", "diamond", "coin", "generator", "script",
+    "lua", "gg", "gameguardian", "injector", "patcher",
+    "memory", "ram", "booster", "tweaker", "config",
+    "settings", "resolution", "graphics", "sensitivity",
+    "aim", "recoil", "damage", "health", "armor",
+    "speed", "jump", "root", "bypass", "bypasser",
+    "crack", "cracked", "premium", "unlocked", "pro",
+    "vip", "gold", "gems", "coins", "money", "cash",
+    "free", "infinite", "mega", "super", "ultra",
+    "extreme", "ultimate", "max", "plus", "extra",
+    "bonus", "special", "rare", "legendary", "mythic",
+    "epic", "heroic", "divine", "immortal",
+    "apk", "xapk", "apks", "zip", "rar", "7z",
+    "obb", "data", "cache", "lib", "so",
+]
+
+
+# ============================================================
+#  SECAO 4.5: DOMINIOS SUSPEITOS (NOVO)
+# ============================================================
+SUSPECT_DOMAINS = [
+    "headtrick", "headtrickpanel", "headtrickcheat",
+    "painelfreefire", "painelff", "ffpanel",
+    "cheatfreefire", "hackfreefire", "modfreefire",
+    "freefirecheat", "freefirehack", "freefiremod",
+    "aimbotff", "wallhackff", "espff", "modmenuff",
+    "platinmods", "blackmod", "modxda", "androidrepublic",
+    "sbenny", "andropalace", "revdl", "rexdl",
+    "happymod", "an1", "moddroid", "android1",
+    "scriptff", "luaff", "injectorff", "cheatengine",
+    "auxilio", "auxilioff", "auxiliofreefire",
+    "miraassistida", "miraauto", "autohead",
+    "geradordiamond", "geradorff", "freefirediamond",
+    "diamondfree", "diamantesfree", "gemasfree",
+    "vpnff", "proxyff", "bypassff", "antibanff",
+    "tutorialcheat", "comohackear", "comomodificar",
+    "norecoil", "antirecoil", "speedhack", "teleportff",
+    "flyhack", "godmodeff", "unlimitedammo",
+    "ffcheats", "ffhack", "ffmod", "ffpanel",
+    "freefirepanel", "freefirescript", "freefirehack",
+    "fftool", "fftools", "ffcheat", "ffmodmenu",
+    "headshotff", "autoheadshot", "magicbullet",
+    "ghostmode", "invisibleff", "noclipff",
+]
+
+BROWSER_PACKAGES = [
+    "com.android.chrome",
+    "org.mozilla.firefox",
+    "com.opera.browser",
+    "com.opera.mini.native",
+    "com.microsoft.emmx",
+    "com.brave.browser",
+    "com.kiwibrowser.browser",
+    "com.duckduckgo.mobile.android",
+    "com.vivaldi.browser",
+    "com.yandex.browser",
+    "com.sec.android.app.sbrowser",
+    "com.amazon.cloud9",
+]
+
+
+# ============================================================
+#  SECAO 5: DRAGAO ASCII ART
+# ============================================================
+DRAGON = C.BRIGHT_CYAN + r"""
+                  ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣴⣿⣿⣿⠀⠀⢀⣠⣤⣶⣶⣶⣶⣶⣶⣶⣦⣤⣀⠀⠀⠀⠀⠀⢀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣾⣿⣿⣿⣿⡔⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⢟⣫⣯⣷⣾⣿⣿⣿⣿⣿⣿⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣾⣿⣿⣿⣿⣿⣿⣷⡙⢿⣿⣿⣿⣿⣿⣿⡿⢋⣵⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣤⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⣙⠿⠿⠿⢟⣫⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⢹⣿⣿⣿⣿⣿⣿⣿⣿⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⠀⠀⠀⠀⢀⣤⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⢸⣿⣿⣿⡏⠉⠙⢿⣿⣿⣦⡀⠀⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⠀⠀⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⣿⡿⡍⠳⣄⡀⢀⣿⣿⣿⣿⣆⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⠀⢀⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⢿⣿⢿⡄⠸⡿⢄⠛⣘⢠⣼⣿⣿⣿⣿⣿⣧⡀⠀⠀⠀⠀
+                  ⠀⠀⠀⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⡞⣼⡻⡄⠳⡤⠽⠾⠿⠿⠿⢛⣻⣿⣿⣿⣷⡀⠀⠀⠀
+                  ⠀⠀⠀⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣾⣿⣿⣄⠙⢶⣶⣶⣶⣿⣿⣿⣿⣿⣿⣿⣧⠀⠀⠀
+                  ⠀⠀⠀⠀⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠟⠛⠉⢉⣁⣀⣀⣀⣀⣀⣉⡉⠙⠛⠻⢿⣿⣿⣿⣿⣿⣯⣻⣍⡲⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡄⠀⠀
+                  ⠀⢀⡀⣶⣤⣌⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠋⣁⣤⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣶⣤⣈⠛⢿⣿⣿⣿⣿⣿⣷⣾⣿⣿⣿⣿⣿⡿⠟⠛⠛⠁⠀⠀
+                  ⣰⣿⣿⣿⣿⣿⣿⣿⣝⢿⣿⣿⣿⣿⣿⣿⣟⣡⣶⠿⢛⣛⣉⣭⣭⣤⣤⡴⠶⠶⠶⠶⢲⣴⣤⠭⠭⡭⣟⠻⠦⣝⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⢉⣀⣠⣶⣿⣆⠀⠀
+                  ⠹⣿⣿⣿⣿⣿⣿⣙⠻⣿⣮⣛⠿⣿⣿⣿⣫⣵⡶⠟⣛⣋⣭⣭⣶⣶⣶⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣾⣮⣽⣿⣿⣿⠿⠟⠛⠉⢀⣴⣿⣿⣿⣿⣿⣿⣶⡀
+                  ⠀⠈⠙⠋⠁⠀⠈⠉⠛⠳⣭⣛⢷⣦⣸⣿⣯⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡏⣿⠀⠀⠀⣀⣴⣾⣿⣿⣿⣿⡟⣿⣿⣿⣿⡇
+                  ⠀⠀⠀⠀⠀⠀⢀⣠⣾⣿⣿⠿⠿⢿⣹⣿⣧⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢸⡏⣀⣴⣾⣿⣿⠿⠛⠉⠀⠀⠀⠈⠛⠛⠉⠀
+                  ⠀⠀⠀⠀⢀⣴⠿⠛⠋⠁⠀⠀⠀⢀⣯⢿⣿⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⣿⠣⣟⡻⠟⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⠀⠀⠉⠀⠀⠀⠀⠀⢀⣀⣴⣾⣿⠈⡿⣿⠃⠀⠀⠀⠈⠉⠛⠻⠿⣿⣿⣿⣿⣿⠿⠛⠉⠉⠀⠈⠉⠛⣿⣽⡟⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⠀⠀⠀⢀⣠⣤⣶⣾⣿⣿⣿⣿⣿⣀⣼⣿⠁⠀⠀⠀⠀⠀⠀⠀⠀⣹⡟⣻⣿⡃⠀⠀⠀⠀⠀⠀⠀⠀⢹⣷⣤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⢀⣴⣾⣿⣿⣿⣿⣿⣿⣿⣿⡿⢹⣿⣿⣿⡄⠀⠀⠀⠀⠀⠀⠀⣰⣿⢣⡇⣿⣷⡀⠀⠀⠀⠀⠀⠀⠀⣼⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⠟⠋⠙⠛⠻⣿⣿⣿⣿⣿⠏⠀⠈⢿⣿⣿⣿⣦⣄⣀⣀⣀⣠⣴⣿⣏⡞⢻⣸⣿⣷⣄⠀⠀⣀⣤⠴⣾⣿⣿⣿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⠀⠀⠀⠀⠀⠀⠹⣿⣿⠃⠀⠀⠀⠈⢿⣿⣵⣾⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠹⣿⣿⣿⣿⣿⣿⣿⣿⣶⠾⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣏⠀⠀⠀⠀⠀⣀⣼⣿⡛⢿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⠟⣡⣾⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⠀⠀⢠⣶⣿⣿⣯⣿⡇⠀⢹⣿⣿⣿⣿⣷⣤⣤⣦⣶⣿⣿⣿⣿⣿⡇⠀⣿⣿⢸⣿⣶⣤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⠀⠀⠀⠀⠀⠀⢀⣄⣠⣴⣾⣿⣟⣿⠟⠁⣿⡇⠀⣿⡿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡏⡇⢀⣿⣿⠙⢮⣛⠿⣷⣦⣄⣀⣀⣀⣠⣀⠀⠀⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⠀⠀⣴⣶⣶⣾⣿⣿⡿⣛⣽⠞⠋⠀⠀⠀⣿⣷⠀⣍⠇⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠉⡄⣸⣿⡿⠀⠀⠈⠙⠮⣟⠿⣿⣿⣿⣿⣿⣿⡆⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⠀⠀⢀⣹⣿⣿⣿⢵⡿⠋⠀⠀⠀⠀⠀⠀⢿⣿⣦⣿⡷⣄⠙⠿⣿⢹⣿⣿⢼⡿⠋⣡⣶⣳⣿⣿⣿⠃⠀⠀⠀⠀⠀⠈⠿⠬⣿⣿⣿⣿⣿⣷⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⠀⠀⠸⣿⣿⣿⣿⠟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⣿⣿⣷⣻⢿⣶⣬⣈⣉⣉⣤⣴⣿⣻⣾⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⣿⣿⡿⠇⠀⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⠀⠀⠀⠀⠙⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣿⣿⣿⣿⡇⣿⣇⣿⢹⣿⣿⣿⣿⡟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                  ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⡿⠏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+""" + C.RESET
+
+
+# ============================================================
+#  SECAO 6: FUNCOES UTILITARIAS
+# ============================================================
+def clear():
+    os.system('clear')
+
+
+def pause():
+    input(f"\n{C.CYAN}[Pressione ENTER para continuar...]{C.RESET}")
+
+
+def print_header(title):
+    print()
+    print(C.CYAN + "╔" + "═" * 50 + "╗" + C.RESET)
+    print(C.CYAN + "║" + C.RESET + " " * 50 + C.CYAN + "║" + C.RESET)
+    padding = (50 - len(title)) // 2
+    print(C.CYAN + "║" + C.RESET + " " * padding + C.BRIGHT_CYAN + C.BOLD + title + C.RESET + " " * (50 - len(title) - padding) + C.CYAN + "║" + C.RESET)
+    print(C.CYAN + "║" + C.RESET + " " * 50 + C.CYAN + "║" + C.RESET)
+    print(C.CYAN + "╚" + "═" * 50 + "╝" + C.RESET)
+    print()
+
+
+def print_section(title):
+    print()
+    print(C.BRIGHT_BLUE + "┌" + "─" * 50 + "┐" + C.RESET)
+    padding = (50 - len(title)) // 2
+    print(C.BRIGHT_BLUE + "│" + C.RESET + " " * padding + C.BRIGHT_WHITE + C.BOLD + title + C.RESET + " " * (50 - len(title) - padding) + C.BRIGHT_BLUE + "│" + C.RESET)
+    print(C.BRIGHT_BLUE + "└" + "─" * 50 + "┘" + C.RESET)
+    print()
+
+
+def print_category(name, color=C.BRIGHT_YELLOW):
+    print(f"\n  {color}{C.BOLD}[ {name} ]{C.RESET}")
+    print(f"  {color}{'─' * (len(name) + 4)}{C.RESET}")
+
+
+def print_found(item, description="", level="warning"):
+    if level == "critical":
+        icon = C.BRIGHT_RED + "🔴" + C.RESET
+        color = C.BRIGHT_RED
+    elif level == "high":
+        icon = C.RED + "⚠️ " + C.RESET
+        color = C.RED
+    elif level == "warning":
+        icon = C.YELLOW + "⚠️ " + C.RESET
+        color = C.YELLOW
+    else:
+        icon = C.GREEN + "✓" + C.RESET
+        color = C.GREEN
+
+    print(f"    {icon} {color}{item}{C.RESET}")
+    if description:
+        print(f"      {C.DIM}→ {description}{C.RESET}")
+
+
+def print_ok(text):
+    print(f"    {C.GREEN}✓ {text}{C.RESET}")
+
+
+def print_error(text):
+    print(f"    {C.RED}✗ {text}{C.RESET}")
+
+
+def print_info(text):
+    print(f"    {C.CYAN}ℹ {text}{C.RESET}")
+
+
+# ============================================================
+#  SECAO 7: CLASSE PRINCIPAL DO SCANNER
+# ============================================================
+class FireDragonScanner:
+    def __init__(self):
+        self.device_connected = False
+        self.device_serial = None
+        self.has_root = False
+        self.warnings = []
+        self.suspects_found = []
+        self.zarchiver_apps = []
+        self.chrome_apps = []
+        self.dump_data = {}
+        self.domains_found = []
+        self.script_apps_found = []
+        self.memory_mods_found = []
+        self.injector_apps_found = []
+        self.hidden_apps_found = []
+        self.modified_libs_found = []
+        self.suspicious_permissions = []
+        self.network_anomalies = []
+        self.wall_of_shame = []
+        self.telegram_cheats = []
+        self.floating_windows = []
+        self.clipboard_cheats = []
+        self.dns_anomalies = []
+        self.hosts_modifications = []
+        self.magisk_modules = []
+
+    def show_dragon(self):
+        clear()
+        print()
+        print(DRAGON)
+        print()
+        time.sleep(0.3)
+
+    def show_main_menu(self):
+        print_section("M E N U   P R I N C I P A L")
+        if self.device_connected:
+            status_color = C.GREEN
+            status_text = f"● Conectado: {self.device_serial}"
+            if self.has_root:
+                status_text += " [ROOT]"
+        else:
+            status_color = C.RED
+            status_text = "● Nenhum dispositivo conectado"
+
+        print(f"  {C.CYAN}ADB:{C.RESET} {status_color}{status_text}{C.RESET}")
+        print()
+        print(f"  {C.YELLOW}[0]{C.RESET} {C.BRIGHT_WHITE}Parear Dispositivo{C.RESET}")
+        print()
+        if self.device_connected:
+            c_scan = C.WHITE
+            c_dump = C.WHITE
+            note = C.DIM
+        else:
+            c_scan = C.DIM
+            c_dump = C.DIM
+            note = C.BRIGHT_RED
+
+        print(f"  {C.YELLOW}[1]{C.RESET} {c_scan}Escannear FreeFire Normal{C.RESET}  {note}(pareie primeiro){C.RESET}")
+        print(f"  {C.YELLOW}[2]{C.RESET} {c_scan}Escannear FreeFire Max{C.RESET}    {note}(pareie primeiro){C.RESET}")
+        print(f"  {C.YELLOW}[3]{C.RESET} {c_dump}Salvar Dump{C.RESET}             {note}(pareie primeiro){C.RESET}")
+        print()
+        print(f"  {C.YELLOW}[S]{C.RESET} {C.BRIGHT_RED}Sair{C.RESET}")
+        print()
+        print(f"  {C.CYAN}➤ Escolha uma das opcoes acima:{C.RESET}", end=" ")
+
+    def check_adb(self):
+        """Verifica se o ADB esta disponivel no PATH"""
+        try:
+            result = subprocess.run(['adb', 'version'], capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                return True
+        except Exception:
+            pass
+        # Verificar se o binary existe em locais comuns do Termux
+        adb_paths = [
+            '/data/data/com.termux/files/usr/bin/adb',
+            '/data/data/com.termux/files/usr/lib/android-sdk/platform-tools/adb',
+            '/usr/bin/adb',
+            '/bin/adb',
+            '/system/bin/adb',
+        ]
+        for path in adb_paths:
+            if os.path.exists(path) and os.access(path, os.X_OK):
+                # Criar symlink para o PATH se necessario
+                termux_bin = '/data/data/com.termux/files/usr/bin/adb'
+                if path != termux_bin and not os.path.exists(termux_bin):
+                    try:
+                        os.symlink(path, termux_bin)
+                        print_info(f"ADB link criado: {path} -> {termux_bin}")
+                    except:
+                        pass
+                return True
+        return False
+
+    def run_adb(self, command):
+        if not self.device_connected:
+            return None
+        try:
+            full_cmd = ['adb', '-s', self.device_serial] + command
+            result = subprocess.run(full_cmd, capture_output=True, text=True, timeout=30)
+            return result
+        except Exception as e:
+            print_error(f"Erro no comando ADB: {e}")
+            return None
+
+    def check_root_device(self):
+        result = self.run_adb(['shell', 'su', '-c', 'id'])
+        if result and result.returncode == 0:
+            self.has_root = True
+            print_found("ROOT DETECTADO", "Dispositivo tem acesso root total", "critical")
+            return True
+        else:
+            self.has_root = False
+            print_info("Dispositivo sem ROOT (acesso limitado)")
+            return False
+
+    def pair_device(self):
+        clear()
+        print_header("PAREAR DISPOSITIVO")
+        if not self.check_adb():
+            print_error("ADB nao encontrado!")
+            print_info("Tentando instalar ADB...")
+            print_info("Metodo 1: pkg install android-tools...")
+            os.system("pkg install android-tools -y 2>/dev/null")
+            if not self.check_adb():
+                print_info("Metodo 2: apt install android-tools...")
+                os.system("apt update -y >/dev/null 2>&1 && apt install android-tools -y 2>/dev/null")
+                if not self.check_adb():
+                    print_info("Metodo 3: apt-get install android-tools...")
+                    os.system("apt-get update -y >/dev/null 2>&1 && apt-get install android-tools -y 2>/dev/null")
+                    if not self.check_adb():
+                        print_info("Metodo 4: Forcando reinstalacao...")
+                        os.system("pkg uninstall android-tools -y 2>/dev/null; pkg install android-tools -y 2>/dev/null")
+                        if not self.check_adb():
+                            print_error("Falha ao instalar ADB automaticamente!")
+                            print_info("Tente manualmente com um dos comandos:")
+                            print(f"  {C.CYAN}pkg install android-tools -y{C.RESET}")
+                            print(f"  {C.CYAN}apt install android-tools -y{C_RESEt}")
+                            print(f"  {C.CYAN}apt-get install android-tools -y{C_RESET}")
+                            print_info("Ou verifique se o mirror do Termux esta configurado:")
+                            print(f"  {C.CYAN}termux-change-repo{C_RESET}")
+                            pause()
+                            return False
+                        else:
+                            print_found("ADB instalado via forcado!", "", "high")
+                    else:
+                        print_found("ADB instalado via apt-get!", "", "high")
+                else:
+                    print_found("ADB instalado via apt!", "", "high")
+            else:
+                print_found("ADB instalado via pkg!", "", "high")
+
+        print_info("Verificando dispositivos conectados...")
+        print()
+        result = subprocess.run(['adb', 'devices'], capture_output=True, text=True)
+        lines = result.stdout.strip().split('\n')
+        devices = []
+        for line in lines[1:]:
+            if '\t' in line:
+                parts = line.split('\t')
+                if len(parts) >= 2:
+                    serial = parts[0].strip()
+                    status = parts[1].strip()
+                    devices.append((serial, status))
+
+        if not devices:
+            print_info("Nenhum dispositivo USB conectado.")
+            print()
+            print_info("Tentando conexao via WiFi...")
+            print()
+            print(f"  {C.WHITE}Digite o IP do dispositivo (ex: 192.168.1.100:5555){C.RESET}")
+            print(f"  {C.WHITE}ou pressione ENTER para cancelar:{C.RESET}")
+            ip = input(f"  {C.CYAN}> {C.RESET}").strip()
+            if ip:
+                print_info(f"Conectando a {ip}...")
+                result = subprocess.run(['adb', 'connect', ip], capture_output=True, text=True)
+                if "connected" in result.stdout.lower() or "already" in result.stdout.lower():
+                    print_found("Conectado com sucesso!", "", "high")
+                    self.device_connected = True
+                    self.device_serial = ip
+                    pause()
+                    return True
+                else:
+                    print_error("Falha na conexao")
+                    print(f"  {C.DIM}{result.stdout}{C.RESET}")
+                    pause()
+                    return False
+            else:
+                print_info("Conexao cancelada.")
+                pause()
+                return False
+        else:
+            print_found(f"{len(devices)} dispositivo(s) encontrado(s)", "", "high")
+            for i, (serial, status) in enumerate(devices):
+                color = C.GREEN if status == "device" else C.YELLOW
+                print(f"    [{i+1}] {color}{serial}{C.RESET} - {status}")
+            print()
+            print_info("Selecione o dispositivo (numero) ou ENTER para o primeiro:")
+            choice = input(f"  {C.CYAN}> {C.RESET}").strip()
+            try:
+                idx = int(choice) - 1 if choice else 0
+                if 0 <= idx < len(devices):
+                    self.device_serial = devices[idx][0]
+                    self.device_connected = True
+                    print_found(f"Dispositivo selecionado: {self.device_serial}", "", "high")
+                    self.check_root_device()
+                    pause()
+                    return True
+            except:
+                pass
+            print_error("Selecao invalida.")
+            pause()
+            return False
+
+    def scan_ff(self, package, name):
+        clear()
+        print_header(f"ESCANEANDO {name.upper()}")
+        print(f"  {C.WHITE}Pacote:{C.RESET} {C.BRIGHT_CYAN}{package}{C.RESET}")
+        print()
+
+        if not self.device_connected:
+            print_error("Nenhum dispositivo conectado!")
+            print_info("Use a opcao [0] para parear primeiro.")
+            pause()
+            return
+
+        self.warnings = []
+        self.suspects_found = []
+        self.zarchiver_apps = []
+        self.chrome_apps = []
+        self.domains_found = []
+        self.script_apps_found = []
+        self.memory_mods_found = []
+        self.injector_apps_found = []
+        self.hidden_apps_found = []
+        self.modified_libs_found = []
+        self.suspicious_permissions = []
+        self.network_anomalies = []
+        self.wall_of_shame = []
+        self.telegram_cheats = []
+        self.floating_windows = []
+        self.clipboard_cheats = []
+        self.dns_anomalies = []
+        self.hosts_modifications = []
+        self.magisk_modules = []
+
+        self.dump_data = {
+            'version': name,
+            'timestamp': datetime.now().isoformat(),
+            'package': package,
+            'device_serial': self.device_serial,
+            'has_root': self.has_root,
+            'findings': [],
+            'zarchiver_apps': [],
+            'chrome_apps': [],
+            'domains_found': [],
+            'script_apps': [],
+            'memory_mods': [],
+            'injector_apps': [],
+            'hidden_apps': [],
+            'modified_libs': [],
+            'suspicious_permissions': [],
+            'network_anomalies': [],
+            'telegram_cheats': [],
+            'floating_windows': [],
+            'clipboard_cheats': [],
+            'dns_anomalies': [],
+            'hosts_modifications': [],
+            'magisk_modules': [],
+            'folder_last_modified': None,
+            'wo_verdict': None,
+            'wo_percentage': 0,
+        }
+
+        print_info("Verificando se o jogo esta instalado...")
+        result = self.run_adb(['shell', 'pm', 'path', package])
+
+        if not result or result.returncode != 0 or not result.stdout.strip():
+            print_error(f"{name} nao encontrado no dispositivo!")
+            pause()
+            return
+
+        print(f"    {C.GREEN}✓ {name} encontrado!{C.RESET}")
+        print()
+
+        # EXECUTAR TODAS AS VERIFICACOES
+        self._check_root_status()
+        self._check_zarchiver_apps()
+        self._check_chrome_apps()
+        self._scan_apps_by_category()
+        self._scan_processes(package)
+        self._check_network()
+        self._check_perms(package)
+        self._check_recent_system_files()
+        self._scan_system_suspect_files()
+
+        # NOVAS FUNCIONALIDADES
+        self._scan_suspect_domains()
+        self._scan_script_apps()
+        self._scan_memory_mods()
+        self._scan_injector_apps()
+        self._scan_hidden_apps()
+        self._scan_modified_libs(package)
+        self._scan_suspicious_permissions(package)
+        self._scan_network_anomalies()
+        self._check_wall_of_shame()
+        self._check_dns_settings()
+        self._scan_hosts_file()
+        self._check_magisk_modules()
+        self._scan_telegram_cheats()
+        self._check_floating_windows()
+        self._scan_clipboard_cheats()
+
+        self._report(name)
+
+
+    def _show_progress(self, current, total, label, width=40):
+        """Mostra uma barra de progresso animada"""
+        progress = int((current / total) * width) if total > 0 else width
+        empty = width - progress
+        bar = C.BRIGHT_GREEN + "█" * progress + C.DIM + "░" * empty + C.RESET
+        percent = int((current / total) * 100) if total > 0 else 100
+        print(f"\r  [{bar}] {C.BRIGHT_GREEN}{C.BOLD}{percent}%{C.RESET} | {label[:40]}", end="", flush=True)
+
+    def _finish_progress(self, width=40):
+        """Finaliza a barra de progresso em 100%"""
+        bar = C.BRIGHT_GREEN + "█" * width + C.RESET
+        print(f"\r  [{bar}] {C.BRIGHT_GREEN}{C.BOLD}100%{C.RESET} | {C.GREEN}Concluido!{C.RESET}          ")
+        print()
+
+    def _check_root_status(self):
+        print_category("VERIFICACAO DE ROOT", C.BRIGHT_YELLOW)
+        result = self.run_adb(['shell', 'which', 'su'])
+        if result and result.stdout.strip():
+            print_found("Binary 'su' encontrado", f"Local: {result.stdout.strip()}", "critical")
+            self.has_root = True
+        else:
+            print_ok("Binary 'su' nao encontrado")
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/magisk'])
+        if result and result.returncode == 0:
+            print_found("Magisk detectado", "Framework de root ativo no dispositivo", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/data/com.koushikdutta.superuser'])
+        if result and result.returncode == 0:
+            print_found("SuperSU detectado", "App de gerenciamento root encontrado", "critical")
+            self.has_root = True
+
+        # ============================================================
+        #  VERIFICACAO DO KernelSU (NOVO)
+        # ============================================================
+        result = self.run_adb(['shell', 'ls', '/data/adb/ksu'])
+        if result and result.returncode == 0:
+            print_found("KernelSU detectado", "Framework de root baseado em kernel ativo no dispositivo", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'which', 'ksud'])
+        if result and result.returncode == 0:
+            print_found("Binary 'ksud' encontrado", f"Local: {result.stdout.strip()}", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/apd'])
+        if result and result.returncode == 0:
+            print_found("APatch/APD detectado", "Framework de root hibrido (KernelSU fork) ativo no dispositivo", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/ap'])
+        if result and result.returncode == 0:
+            print_found("APatch detectado", "Framework de root hibrido ativo no dispositivo", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'getprop', 'ro.boot.verifiedbootstate'])
+        if result and result.stdout.strip():
+            vbstate = result.stdout.strip().lower()
+            if vbstate in ['orange', 'yellow', 'red']:
+                print_found(f"Boot state comprometido: {vbstate}", "Dispositivo pode ter bootloader desbloqueado ou root", "critical")
+                self.has_root = True
+
+        result = self.run_adb(['shell', 'getprop', 'ro.boot.vbmeta.device_state'])
+        if result and result.stdout.strip():
+            if result.stdout.strip().lower() != 'locked':
+                print_found("VBMeta desbloqueado", "Bootloader pode estar desbloqueado", "high")
+                self.has_root = True
+
+        result = self.run_adb(['shell', 'cat', '/proc/1/status', '|', 'grep', 'CapEff'])
+        if result and result.stdout.strip():
+            capeff = result.stdout.strip()
+            if '0000003fffffffff' in capeff or '0000001fffffffff' in capeff:
+                print_found("Capabilities de root detectadas", f"CapEff: {capeff}", "critical")
+                self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/system/bin/su'])
+        if result and result.returncode == 0:
+            print_found("Binary 'su' em /system/bin/", "Root tradicional detectado", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/system/xbin/su'])
+        if result and result.returncode == 0:
+            print_found("Binary 'su' em /system/xbin/", "Root tradicional detectado", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/sbin/su'])
+        if result and result.returncode == 0:
+            print_found("Binary 'su' em /sbin/", "Root tradicional detectado", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/local/tmp/su'])
+        if result and result.returncode == 0:
+            print_found("Binary 'su' em /data/local/tmp/", "Root temporario detectado", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/local/su'])
+        if result and result.returncode == 0:
+            print_found("Binary 'su' em /data/local/", "Root temporario detectado", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/su/bin/su'])
+        if result and result.returncode == 0:
+            print_found("Binary 'su' em /su/bin/", "SuperSU systemless detectado", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/ksu/modules'])
+        if result and result.returncode == 0:
+            print_found("Modulos KernelSU detectados", "KernelSU com modulos ativos", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/ksu/bin'])
+        if result and result.returncode == 0:
+            print_found("Binarios KernelSU detectados", "KernelSU instalado e ativo", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/ksu/modules.img'])
+        if result and result.returncode == 0:
+            print_found("Imagem de modulos KernelSU", "KernelSU com overlay de modulos", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/ksu/modules_update.img'])
+        if result and result.returncode == 0:
+            print_found("Imagem de update KernelSU", "KernelSU com modulos pendentes", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'cat', '/data/adb/ksu/version'])
+        if result and result.returncode == 0 and result.stdout.strip():
+            ksu_version = result.stdout.strip()
+            print_found(f"KernelSU v{ksu_version}", f"Versao do KernelSU instalada: {ksu_version}", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/apd/modules'])
+        if result and result.returncode == 0:
+            print_found("Modulos APatch detectados", "APatch com modulos ativos", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'cat', '/data/adb/apd/version'])
+        if result and result.returncode == 0 and result.stdout.strip():
+            apd_version = result.stdout.strip()
+            print_found(f"APatch v{apd_version}", f"Versao do APatch instalada: {apd_version}", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/ap/modules'])
+        if result and result.returncode == 0:
+            print_found("Modulos APatch (legacy) detectados", "APatch com modulos ativos", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'getprop', 'persist.sys.usb.config'])
+        if result and result.stdout.strip():
+            usb_config = result.stdout.strip().lower()
+            if 'adb' in usb_config and ('mtp' in usb_config or 'ptp' in usb_config):
+                print_info(f"USB config: {usb_config}")
+
+        result = self.run_adb(['shell', 'getprop', 'ro.debuggable'])
+        if result and result.stdout.strip() == '1':
+            print_found("Modo debug ativo (ro.debuggable=1)", "Dispositivo em modo de desenvolvimento", "high")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'getprop', 'ro.secure'])
+        if result and result.stdout.strip() == '0':
+            print_found("ro.secure=0", "Dispositivo com seguranca reduzida (root provavel)", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/magisk.img'])
+        if result and result.returncode == 0:
+            print_found("Magisk.img detectado", "Magisk legacy instalado", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/magisk.db'])
+        if result and result.returncode == 0:
+            print_found("Magisk database detectada", "Magisk com configuracoes salvas", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/modules'])
+        if result and result.returncode == 0:
+            print_found("Modulos Magisk detectados", "Magisk com modulos ativos", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/post-fs-data.d'])
+        if result and result.returncode == 0:
+            print_found("Scripts Magisk post-fs detectados", "Magisk com scripts de inicializacao", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/service.d'])
+        if result and result.returncode == 0:
+            print_found("Scripts Magisk service detectados", "Magisk com scripts de servico", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'cat', '/data/adb/magisk/busybox'])
+        if result and result.returncode == 0:
+            print_found("Busybox Magisk detectado", "Magisk com busybox integrado", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/ksu/busybox'])
+        if result and result.returncode == 0:
+            print_found("Busybox KernelSU detectado", "KernelSU com busybox integrado", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/apd/busybox'])
+        if result and result.returncode == 0:
+            print_found("Busybox APatch detectado", "APatch com busybox integrado", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/dev/.root'])
+        if result and result.returncode == 0:
+            print_found("Marcador .root em /dev/", "Root temporario detectado", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/dev/.magisk.unblock'])
+        if result and result.returncode == 0:
+            print_found("Marcador Magisk unblock", "Magisk ativo recentemente", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/local/.busybox'])
+        if result and result.returncode == 0:
+            print_found("Busybox temporario detectado", "Root temporario possivel", "high")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'cat', '/proc/mounts'])
+        if result and result.stdout:
+            mounts = result.stdout.lower()
+            if 'magisk' in mounts:
+                print_found("Magisk em /proc/mounts", "Magisk montado no sistema", "critical")
+                self.has_root = True
+            if 'ksu' in mounts:
+                print_found("KernelSU em /proc/mounts", "KernelSU montado no sistema", "critical")
+                self.has_root = True
+            if 'apd' in mounts:
+                print_found("APatch em /proc/mounts", "APatch montado no sistema", "critical")
+                self.has_root = True
+
+        result = self.run_adb(['shell', 'cat', '/proc/self/status'])
+        if result and result.stdout:
+            status = result.stdout.lower()
+            if 'ns_pid' in status or 'ns_tgid' in status:
+                print_info("Namespace isolation detectada")
+
+        result = self.run_adb(['shell', 'ls', '/data/data/me.weishu.kernelsu'])
+        if result and result.returncode == 0:
+            print_found("App KernelSU detectado", "KernelSU Manager instalado", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/data/me.bmax.apatch'])
+        if result and result.returncode == 0:
+            print_found("App APatch detectado", "APatch Manager instalado", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'pm', 'path', 'me.weishu.kernelsu'])
+        if result and result.returncode == 0:
+            print_found("KernelSU Manager (me.weishu.kernelsu)", "App de gerenciamento KernelSU instalado", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'pm', 'path', 'me.bmax.apatch'])
+        if result and result.returncode == 0:
+            print_found("APatch Manager (me.bmax.apatch)", "App de gerenciamento APatch instalado", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'pm', 'path', 'com.android.shell'])
+        if result and result.returncode == 0:
+            print_info("Shell app instalado (normal em ADB)")
+
+        result = self.run_adb(['shell', 'cat', '/sys/fs/selinux/enforce'])
+        if result and result.stdout.strip():
+            if result.stdout.strip() == '0':
+                print_found("SELinux em permissive mode", "Seguranca do kernel reduzida", "high")
+                self.has_root = True
+            else:
+                print_ok("SELinux em enforcing mode")
+
+        result = self.run_adb(['shell', 'getenforce'])
+        if result and result.stdout.strip():
+            if result.stdout.strip().lower() == 'permissive':
+                print_found("SELinux permissive (getenforce)", "Seguranca do kernel reduzida", "high")
+                self.has_root = True
+            elif result.stdout.strip().lower() == 'enforcing':
+                print_ok("SELinux enforcing")
+
+        result = self.run_adb(['shell', 'ls', '/sys/kernel/security/lsm'])
+        if result and result.returncode == 0:
+            lsm = result.stdout.strip().lower()
+            if 'selinux' not in lsm and 'apparmor' not in lsm:
+                print_found("LSM nao contem SELinux/AppArmor", f"LSM: {lsm}", "high")
+                self.has_root = True
+
+        result = self.run_adb(['shell', 'cat', '/proc/cmdline'])
+        if result and result.stdout:
+            cmdline = result.stdout.lower()
+            if 'androidboot.verifiedbootstate=orange' in cmdline:
+                print_found("Boot state orange no cmdline", "Bootloader desbloqueado confirmado", "critical")
+                self.has_root = True
+            if 'androidboot.veritymode=disabled' in cmdline:
+                print_found("DM-Verity desabilitado", "Integridade do sistema comprometida", "critical")
+                self.has_root = True
+            if 'androidboot.selinux=permissive' in cmdline:
+                print_found("SELinux permissive no boot", "Seguranca do kernel reduzida no boot", "critical")
+                self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/ksu/.allowlist'])
+        if result and result.returncode == 0:
+            print_found("KernelSU allowlist detectada", "KernelSU com lista de apps permitidos", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/ksu/.denylist'])
+        if result and result.returncode == 0:
+            print_found("KernelSU denylist detectada", "KernelSU com lista de apps negados", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/apd/.allowlist'])
+        if result and result.returncode == 0:
+            print_found("APatch allowlist detectada", "APatch com lista de apps permitidos", "critical")
+            self.has_root = True
+
+        result = self.run_adb(['shell', 'ls', '/data/adb/apd/.denylist'])
+        if result and result.returncode == 0:
+            print_found("APatch denylist detectada", "APatch com lista de apps negados", "critical")
+            self.has_root = True
+
+        root_apps_found = []
+        for app in ROOT_APPS:
+            result = self.run_adb(['shell', 'pm', 'path', app])
+            if result and result.returncode == 0:
+                root_apps_found.append(app)
+
+        if root_apps_found:
+            print_found(f"{len(root_apps_found)} app(s) de ROOT instalado(s)", "", "critical")
+            for app in root_apps_found[:5]:
+                print(f"      {C.RED}• {app}{C.RESET}")
+            if len(root_apps_found) > 5:
+                print(f"      {C.DIM}... e mais {len(root_apps_found) - 5}{C.RESET}")
+
+        if not self.has_root:
+            print_ok("Dispositivo parece estar sem root")
+        else:
+            self.warnings.append("DISPOSITIVO COM ROOT - maior risco de modificacoes")
+
+
+
+    def _scan_system_suspect_files(self):
+        """Escaneia todo o sistema por arquivos suspeitos relacionados a Free Fire"""
+        print_category("ARQUIVOS DO SISTEMA SUSPEITOS", C.BRIGHT_RED)
+
+        # Palavras-chave EXATAS solicitadas
+        # NOTA: "mod" foi removido pois gerava muitos falsos positivos
+        suspect_names = [
+            "aimbot", "holograma", "xit", "ffh4x",
+            "painel", "proxy",
+        ]
+
+        # Extensoes EXATAS solicitadas
+        suspect_extensions = [".apks", ".apk"]
+
+        # Diretorios para escanear
+        scan_paths = [
+            "/sdcard",
+            "/sdcard/Download",
+            "/sdcard/Documents",
+            "/sdcard/Android",
+            "/sdcard/Android/data",
+            "/sdcard/Android/obb",
+            "/data/local/tmp",
+            "/storage/emulated/0",
+            "/storage/emulated/0/Download",
+            "/storage/emulated/0/Documents",
+        ]
+
+        all_suspect_files = []
+        scanned_dirs = 0
+        total_dirs = len(scan_paths)
+
+        # Barra de progresso animada
+        print()
+        print(f"  {C.BRIGHT_GREEN}{C.BOLD}🔄 ANALISANDO ARQUIVOS DO SISTEMA...{C.RESET}")
+        print()
+
+        for idx, sp in enumerate(scan_paths):
+            result = self.run_adb(['shell', 'ls', '-la', sp])
+            if result and result.returncode == 0:
+                scanned_dirs += 1
+            self._show_progress(idx + 1, total_dirs, f"Verificando: {sp}")
+            time.sleep(0.15)
+
+            # Buscar arquivos com nomes suspeitos
+            for name in suspect_names:
+                result = self.run_adb([
+                    'shell', 'find', sp, '-iname', f'*{name}*',
+                    '-type', 'f', '2>/dev/null'
+                ])
+                if result and result.stdout.strip():
+                    files = result.stdout.strip().split('\n')
+                    for f in files:
+                        if f and f not in [x['path'] for x in all_suspect_files]:
+                            fname = f.split('/')[-1]
+                            ext = '.' + fname.split('.')[-1].lower() if '.' in fname else ''
+                            all_suspect_files.append({
+                                'path': f,
+                                'name': fname,
+                                'extension': ext,
+                                'matched_keyword': name,
+                                'directory': sp
+                            })
+
+            # Buscar arquivos com extensoes .apk e .apks
+            for ext in suspect_extensions:
+                result = self.run_adb([
+                    'shell', 'find', sp, '-iname', f'*{ext}',
+                    '-type', 'f', '2>/dev/null'
+                ])
+                if result and result.stdout.strip():
+                    files = result.stdout.strip().split('\n')
+                    for f in files:
+                        if f and f not in [x['path'] for x in all_suspect_files]:
+                            fname = f.split('/')[-1]
+                            all_suspect_files.append({
+                                'path': f,
+                                'name': fname,
+                                'extension': ext,
+                                'matched_keyword': f"extensao {ext}",
+                                'directory': sp
+                            })
+
+        self._finish_progress()
+
+        if all_suspect_files:
+            print_found(f"{len(all_suspect_files)} ARQUIVO(S) SUSPEITO(S) NO SISTEMA!", "", "critical")
+            print()
+
+            # Separar por prioridade: .apks/.apk primeiro
+            apk_files = [f for f in all_suspect_files if f['extension'] in ['.apk', '.apks']]
+            other_files = [f for f in all_suspect_files if f['extension'] not in ['.apk', '.apks']]
+
+            # Mostrar APKs primeiro (CRITICO)
+            if apk_files:
+                print(f"      {C.BRIGHT_RED}{C.BOLD}{'═' * 48}{C.RESET}")
+                print(f"      {C.BRIGHT_RED}{C.BOLD}  🔴 ARQUIVOS APK/APKS - PRIORIDADE MAXIMA{C.RESET}")
+                print(f"      {C.BRIGHT_RED}{C.BOLD}{'═' * 48}{C.RESET}")
+                print()
+                for sf in apk_files[:25]:
+                    print(f"      {C.BRIGHT_RED}📦 {sf['name']}{C.RESET}")
+                    print(f"        {C.YELLOW}📁 Caminho: {sf['path']}{C.RESET}")
+                    print(f"        {C.YELLOW}🔍 Motivo: '{sf['matched_keyword']}'{C.RESET}")
+                    print(f"        {C.BRIGHT_RED}{C.BOLD}  → POSSIVEL APP DE CHEAT/MOD!{C.RESET}")
+                    print()
+                    self.suspects_found.append({
+                        'type': 'system_suspect_file',
+                        'path': sf['path'],
+                        'name': sf['name'],
+                        'keyword': sf['matched_keyword']
+                    })
+                    self.dump_data['findings'].append({
+                        'type': 'system_suspect_file',
+                        'path': sf['path'],
+                        'name': sf['name'],
+                        'keyword': sf['matched_keyword']
+                    })
+                if len(apk_files) > 25:
+                    print(f"      {C.DIM}... e mais {len(apk_files) - 25} arquivos APK/APKS{C.RESET}")
+                    print()
+
+            # Mostrar outros arquivos
+            if other_files:
+                print(f"      {C.YELLOW}{C.BOLD}{'═' * 48}{C.RESET}")
+                print(f"      {C.YELLOW}{C.BOLD}  ⚠️  OUTROS ARQUIVOS SUSPEITOS{C.RESET}")
+                print(f"      {C.YELLOW}{C.BOLD}{'═' * 48}{C.RESET}")
+                print()
+                for sf in other_files[:20]:
+                    print(f"      {C.YELLOW}📄 {sf['name']}{C.RESET}")
+                    print(f"        {C.DIM}📁 Caminho: {sf['path']}{C.RESET}")
+                    print(f"        {C.DIM}🔍 Motivo: '{sf['matched_keyword']}'{C.RESET}")
+                    print()
+                    self.suspects_found.append({
+                        'type': 'system_suspect_file',
+                        'path': sf['path'],
+                        'name': sf['name'],
+                        'keyword': sf['matched_keyword']
+                    })
+                    self.dump_data['findings'].append({
+                        'type': 'system_suspect_file',
+                        'path': sf['path'],
+                        'name': sf['name'],
+                        'keyword': sf['matched_keyword']
+                    })
+                if len(other_files) > 20:
+                    print(f"      {C.DIM}... e mais {len(other_files) - 20} arquivos{C.RESET}")
+                    print()
+
+            print(f"      {C.BRIGHT_RED}{C.BOLD}{'═' * 48}{C.RESET}")
+            print(f"      {C.BRIGHT_RED}{C.BOLD}  TOTAL: {len(all_suspect_files)} ARQUIVO(S) SUSPEITO(S){C.RESET}")
+            print(f"      {C.BRIGHT_RED}{C.BOLD}{'═' * 48}{C.RESET}")
+            self.warnings.append(f"{len(all_suspect_files)} ARQUIVOS SUSPEITOS NO SISTEMA")
+        else:
+            print_ok(f"Nenhum arquivo suspeito encontrado em {scanned_dirs} diretorios verificados")
+
+    def _check_zarchiver_apps(self):
+        print_category("APPS DO ZARCHIVER", C.BRIGHT_MAGENTA)
+        zarchiver_paths = [
+            "/sdcard/Download/ZArchiver",
+            "/sdcard/ZArchiver",
+            "/sdcard/Documents/ZArchiver",
+            "/sdcard/Android/data/ru.zdevs.zarchiver",
+            "/sdcard/Android/data/ru.zdevs.zarchiver.pro",
+            "/data/data/ru.zdevs.zarchiver",
+            "/data/data/ru.zdevs.zarchiver.pro",
+        ]
+        found_zarchiver = False
+        all_files = []
+        for path in zarchiver_paths:
+            result = self.run_adb(['shell', 'ls', '-la', path])
+            if result and result.returncode == 0:
+                found_zarchiver = True
+                print_found("ZArchiver detectado", f"Em: {path}", "high")
+                result_files = self.run_adb([
+                    'shell', 'find', path, 
+                    '-name', '*.apk', '-o', '-name', '*.zip', 
+                    '-o', '-name', '*.rar', '-o', '-name', '*.7z',
+                    '-o', '-name', '*.xapk', '-o', '-name', '*.apks'
+                ])
+                if result_files and result_files.stdout.strip():
+                    files = result_files.stdout.strip().split('\n')
+                    all_files.extend(files)
+
+        if all_files:
+            print(f"\n      {C.BRIGHT_MAGENTA}{C.BOLD}ARQUIVOS ENCONTRADOS NO ZARCHIVER:{C.RESET}")
+            for f in all_files[:20]:
+                fname = f.split('/')[-1]
+                print(f"      {C.MAGENTA}• {fname}{C.RESET}")
+                self.zarchiver_apps.append(fname)
+                self.dump_data['zarchiver_apps'].append(fname)
+                lower_f = f.lower()
+                for kw in ['freefire', 'ff', 'cheat', 'hack', 'mod', 'aimbot', 'wall', 'esp', 'script', 'lua', 'gg']:
+                    if kw in lower_f:
+                        print(f"        {C.BRIGHT_RED}⚠️  ARQUIVO SUSPEITO RELACIONADO A FREE FIRE!{C.RESET}")
+                        self.suspects_found.append({
+                            'type': 'zarchiver_suspect',
+                            'file': fname,
+                            'path': f,
+                            'keyword': kw
+                        })
+                        self.dump_data['findings'].append({
+                            'type': 'zarchiver_suspect',
+                            'file': fname,
+                            'keyword': kw
+                        })
+                        break
+            if len(all_files) > 20:
+                print(f"      {C.DIM}... e mais {len(all_files) - 20} arquivos{C.RESET}")
+        elif found_zarchiver:
+            print_info("ZArchiver encontrado mas sem arquivos de instalacao")
+        else:
+            print_ok("ZArchiver nao encontrado no dispositivo")
+
+    def _check_chrome_apps(self):
+        print_category("APPS DO CHROME", C.BRIGHT_BLUE)
+        chrome_paths = [
+            "/sdcard/Download",
+            "/sdcard/Android/data/com.android.chrome/files/Download",
+            "/data/data/com.android.chrome/cache",
+        ]
+        found_chrome = False
+        all_files = []
+        for path in chrome_paths:
+            result = self.run_adb(['shell', 'ls', '-la', path])
+            if result and result.returncode == 0:
+                found_chrome = True
+                result_files = self.run_adb([
+                    'shell', 'find', path,
+                    '-name', '*.apk', '-o', '-name', '*.xapk', 
+                    '-o', '-name', '*.apks', '-o', '-name', '*freefire*',
+                    '-o', '-name', '*cheat*', '-o', '-name', '*hack*',
+                    '-o', '-name', '*mod*', '-o', '-name', '*.lua'
+                ])
+                if result_files and result_files.stdout.strip():
+                    files = result_files.stdout.strip().split('\n')
+                    all_files.extend(files)
+
+        if all_files:
+            print(f"\n      {C.BRIGHT_BLUE}{C.BOLD}ARQUIVOS ENCONTRADOS NO CHROME:{C.RESET}")
+            for f in all_files[:20]:
+                fname = f.split('/')[-1]
+                print(f"      {C.BLUE}• {fname}{C.RESET}")
+                self.chrome_apps.append(fname)
+                self.dump_data['chrome_apps'].append(fname)
+                lower_f = f.lower()
+                for kw in ['freefire', 'ff', 'cheat', 'hack', 'mod', 'aimbot', 'wall', 'esp', 'script', 'lua', 'gg']:
+                    if kw in lower_f:
+                        print(f"        {C.BRIGHT_RED}⚠️  ARQUIVO SUSPEITO BAIXADO PELO CHROME!{C.RESET}")
+                        self.suspects_found.append({
+                            'type': 'chrome_suspect',
+                            'file': fname,
+                            'path': f,
+                            'keyword': kw
+                        })
+                        self.dump_data['findings'].append({
+                            'type': 'chrome_suspect',
+                            'file': fname,
+                            'keyword': kw
+                        })
+                        break
+            if len(all_files) > 20:
+                print(f"      {C.DIM}... e mais {len(all_files) - 20} arquivos{C.RESET}")
+        elif found_chrome:
+            print_info("Chrome encontrado mas sem downloads suspeitos")
+        else:
+            print_ok("Chrome nao encontrado ou sem downloads")
+
+
+    def _scan_apps_by_category(self):
+        print_category("APPS SUSPEITOS POR CATEGORIA", C.BRIGHT_YELLOW)
+        result = self.run_adb(['shell', 'pm', 'list', 'packages'])
+        if not result or result.returncode != 0:
+            print_error("Nao foi possivel listar apps instalados")
+            return
+        installed = result.stdout.lower()
+        categories = [
+            ("Modificadores de Jogo", GAME_MODIFIERS, C.BRIGHT_RED),
+            ("Gerenciadores de Arquivos (Modding)", FILE_MANAGERS, C.BRIGHT_YELLOW),
+            ("Clonadores / Espacos Virtuais", CLONERS, C.BRIGHT_MAGENTA),
+            ("VPNs / Proxies", VPNS, C.BRIGHT_BLUE),
+            ("Apps Falsos / Clones", FAKE_APPS, C.BRIGHT_CYAN),
+            ("Emuladores", EMULATORS, C.BRIGHT_GREEN),
+            ("Cheat Free Fire", FF_CHEATS, C.BRIGHT_RED),
+            ("Apps de Script/Automacao", SCRIPT_APPS, C.BRIGHT_YELLOW),
+            ("Modificadores de Memoria", MEMORY_MODS, C.BRIGHT_MAGENTA),
+            ("Apps de Injecao", INJECTOR_APPS, C.BRIGHT_RED),
+        ]
+        total_found = 0
+        for cat_name, cat_apps, cat_color in categories:
+            found_in_cat = []
+            for app in cat_apps:
+                if app.lower() in installed:
+                    found_in_cat.append(app)
+            if found_in_cat:
+                total_found += len(found_in_cat)
+                print(f"\n      {cat_color}{C.BOLD}[ {cat_name} ]{C.RESET}")
+                print(f"      {cat_color}{'─' * (len(cat_name) + 4)}{C.RESET}")
+                for app in found_in_cat:
+                    print_found(app, "App suspeito instalado", "high")
+                    self.suspects_found.append({'type': 'app', 'package': app, 'category': cat_name})
+                    self.dump_data['findings'].append({'type': 'app', 'package': app, 'category': cat_name})
+        if total_found == 0:
+            print_ok("Nenhum app suspeito encontrado em nenhuma categoria")
+        else:
+            print(f"\n      {C.BRIGHT_GREEN}{C.BOLD}TOTAL: {total_found} app(s) suspeito(s) encontrado(s)!{C.RESET}")
+
+    def _scan_processes(self, package):
+        print_category("PROCESSOS EM EXECUCAO", C.BRIGHT_YELLOW)
+        result = self.run_adb(['shell', 'ps', '|', 'grep', package])
+        if result and result.stdout.strip():
+            print_found("Jogo esta em execucao", "", "high")
+            for line in result.stdout.strip().split('\n'):
+                print(f"      {C.WHITE}{line.strip()}{C.RESET}")
+        else:
+            print_info("Jogo nao esta rodando no momento")
+        result2 = self.run_adb(['shell', 'ps'])
+        if result2 and result2.stdout:
+            procs = result2.stdout.lower()
+            suspect = ['gameguardian', 'gg', 'virtual', 'parallel', 'dual', 'clone', 'lucky', 'patcher', 'magisk']
+            found = False
+            for p in suspect:
+                if p in procs:
+                    print_found(f"Processo suspeito: {p}", "Cheat/modificacao pode estar ativo!", "critical")
+                    found = True
+            if not found:
+                print_ok("Nenhum processo suspeito obvio")
+
+    def _check_network(self):
+        print_category("CONFIGURACAO DE REDE", C.BRIGHT_BLUE)
+        result = self.run_adb(['shell', 'ifconfig'])
+        if result and result.stdout:
+            out = result.stdout.lower()
+            vpn_found = False
+            for iface in ['tun', 'ppp', 'wg', 'tap']:
+                if iface in out:
+                    print_found(f"VPN detectada: {iface}", "Pode mascarar localizacao ou burlar ban", "high")
+                    self.warnings.append(f"VPN detectada: {iface}")
+                    vpn_found = True
+            if not vpn_found:
+                print_ok("Nenhuma VPN detectada")
+        result2 = self.run_adb(['shell', 'settings', 'get', 'global', 'http_proxy'])
+        if result2 and result2.stdout.strip() not in [':0', 'null', '']:
+            print_found(f"Proxy configurado: {result2.stdout.strip()}", "Pode interceptar trafego do jogo", "high")
+            self.warnings.append(f"Proxy: {result2.stdout.strip()}")
+        else:
+            print_ok("Sem proxy configurado")
+
+
+    def _check_perms(self, package):
+        print_category("PERMISSOES DO APP", C.BRIGHT_YELLOW)
+        result = self.run_adb(['shell', 'dumpsys', 'package', package, '|', 'grep', 'permission'])
+        if result and result.stdout:
+            perms = result.stdout.lower()
+            suspect_perms = ['system_alert_window', 'write_settings', 'device_admin']
+            found = False
+            for p in suspect_perms:
+                if p in perms:
+                    print_found(f"Permissao perigosa: {p}", "Pode ser explorada por cheats", "warning")
+                    found = True
+            if not found:
+                print_ok("Permissoes normais detectadas")
+
+    def _check_recent_system_files(self):
+        print_category("ARQUIVOS RECENTEMENTE MODIFICADOS", C.BRIGHT_CYAN)
+        result = self.run_adb(['shell', 'find', '/sdcard', '-mtime', '-1', '-type', 'f'])
+        if result and result.stdout.strip():
+            files = result.stdout.strip().split('\n')
+            suspect_files = [f for f in files if any(kw in f.lower() for kw in ['freefire', 'cheat', 'hack', 'mod', 'script', 'lua', 'apk', 'gg'])]
+            if suspect_files:
+                print_found(f"{len(suspect_files)} arquivo(s) suspeito(s) modificado(s) nas ultimas 24h", "", "critical")
+                for f in suspect_files[:15]:
+                    print(f"      {C.BRIGHT_RED}• {f}{C.RESET}")
+                    print(f"        {C.RED}→ Modificado RECENTEMENTE - atividade de cheat!{C.RESET}")
+                    self.suspects_found.append({'type': 'recent_file', 'path': f})
+                    self.dump_data['findings'].append({'type': 'recent_file', 'path': f})
+            else:
+                print_ok(f"{len(files)} arquivos modificados nas ultimas 24h, nenhum suspeito")
+        else:
+            print_info("Nao foi possivel verificar arquivos recentes")
+
+    # ============================================================
+    #  NOVAS FUNCIONALIDADES ANTI-CHEAT
+    # ============================================================
+
+    def _scan_suspect_domains(self):
+        print_category("DOMINIOS SUSPEITOS", C.BRIGHT_YELLOW)
+        all_domains_found = []
+        total_browsers = len(BROWSER_PACKAGES)
+
+        for idx, browser in enumerate(BROWSER_PACKAGES):
+            browser_paths = [
+                f"/data/data/{browser}/cache",
+                f"/data/data/{browser}/app_chrome/Default",
+                f"/data/data/{browser}/databases",
+                f"/sdcard/Android/data/{browser}",
+            ]
+            for bp in browser_paths:
+                result = self.run_adb(['shell', 'ls', '-la', bp])
+                if result and result.returncode == 0:
+                    result2 = self.run_adb(['shell', 'strings', bp])
+                    if result2 and result2.stdout:
+                        content = result2.stdout.lower()
+                        for domain in SUSPECT_DOMAINS:
+                            if domain in content:
+                                lines = result2.stdout.split('\n')
+                                for line in lines:
+                                    if domain in line.lower():
+                                        all_domains_found.append({
+                                            'domain': domain,
+                                            'context': line.strip()[:100],
+                                            'browser': browser,
+                                            'source': 'cache'
+                                        })
+
+        text_paths = [
+            "/sdcard/Download", "/sdcard/Documents", "/sdcard",
+            "/data/local/tmp", "/data/data"
+        ]
+        for tp in text_paths:
+            result = self.run_adb([
+                'shell', 'find', tp, '-name', '*.txt', '-o', '-name', '*.html',
+                '-o', '-name', '*.json', '-o', '-name', '*.xml', '-o', '-name', '*.log'
+            ])
+            if result and result.stdout.strip():
+                files = result.stdout.strip().split('\n')
+                for f in files[:50]:
+                    try:
+                        content_result = self.run_adb(['shell', 'cat', f])
+                        if content_result and content_result.stdout:
+                            content = content_result.stdout.lower()
+                            for domain in SUSPECT_DOMAINS:
+                                if domain in content:
+                                    all_domains_found.append({
+                                        'domain': domain,
+                                        'file': f,
+                                        'source': 'arquivo'
+                                    })
+                    except:
+                        pass
+
+        result = self.run_adb(['shell', 'dumpsys', 'clipboard'])
+        if result and result.stdout:
+            clipboard = result.stdout.lower()
+            for domain in SUSPECT_DOMAINS:
+                if domain in clipboard:
+                    all_domains_found.append({
+                        'domain': domain,
+                        'source': 'clipboard'
+                    })
+
+        seen = set()
+        unique_domains = []
+        for d in all_domains_found:
+            key = d['domain'] + d.get('file', '') + d.get('browser', '')
+            if key not in seen:
+                seen.add(key)
+                unique_domains.append(d)
+
+
+        if unique_domains:
+            print_found(f"{len(unique_domains)} DOMINIO(S) SUSPEITO(S) ENCONTRADO(S)!", "", "critical")
+            for d in unique_domains[:30]:
+                domain = d['domain']
+                source = d.get('source', 'desconhecido')
+                browser = d.get('browser', '')
+                file_ref = d.get('file', d.get('context', ''))[:60]
+                print(f"      {C.BRIGHT_RED}🔴 {domain}{C.RESET}")
+                print(f"        {C.YELLOW}→ Fonte: {source}{C.RESET}")
+                if browser:
+                    print(f"        {C.YELLOW}→ Browser: {browser}{C.RESET}")
+                if file_ref:
+                    print(f"        {C.YELLOW}→ Referencia: {file_ref}{C.RESET}")
+                print(f"        {C.RED}→ ACESSO A SITE DE CHEAT/PAINEL DETECTADO!{C.RESET}")
+                self.domains_found.append(d)
+                self.dump_data['domains_found'].append(d)
+                self.dump_data['findings'].append({
+                    'type': 'suspect_domain',
+                    'domain': domain,
+                    'source': source
+                })
+            if len(unique_domains) > 30:
+                print(f"      {C.DIM}... e mais {len(unique_domains) - 30} dominios{C.RESET}")
+        else:
+            print_ok("Nenhum dominio suspeito encontrado")
+
+    def _scan_script_apps(self):
+        print_category("APPS DE SCRIPT / AUTOMACAO", C.BRIGHT_YELLOW)
+        result = self.run_adb(['shell', 'pm', 'list', 'packages'])
+        if not result or result.returncode != 0:
+            print_error("Nao foi possivel listar apps")
+            return
+        installed = result.stdout.lower()
+        found = []
+        total_apps = len(SCRIPT_APPS)
+        for idx, app in enumerate(SCRIPT_APPS):
+            if app.lower() in installed:
+                found.append(app)
+
+        if found:
+            print_found(f"{len(found)} app(s) de script/automacao encontrado(s)!", "", "high")
+            for app in found:
+                print(f"      {C.YELLOW}⚠️  {app}{C.RESET}")
+                print(f"        {C.RED}→ Pode ser usado para macros/auto-click em jogos!{C.RESET}")
+                self.script_apps_found.append(app)
+                self.dump_data['script_apps'].append(app)
+                self.dump_data['findings'].append({'type': 'script_app', 'package': app})
+        else:
+            print_ok("Nenhum app de script/automacao encontrado")
+
+    def _scan_memory_mods(self):
+        print_category("MODIFICADORES DE MEMORIA", C.BRIGHT_MAGENTA)
+        result = self.run_adb(['shell', 'pm', 'list', 'packages'])
+        if not result or result.returncode != 0:
+            return
+        installed = result.stdout.lower()
+        found = []
+        total_mem = len(MEMORY_MODS)
+        for idx, app in enumerate(MEMORY_MODS):
+            if app.lower() in installed:
+                found.append(app)
+        result2 = self.run_adb(['shell', 'ps'])
+        if result2 and result2.stdout:
+            procs = result2.stdout.lower()
+            for app in MEMORY_MODS:
+                pkg_name = app.split('.')[-1] if '.' in app else app
+                if pkg_name in procs and app not in found:
+                    found.append(app)
+
+        if found:
+            print_found(f"{len(found)} modificador(es) de memoria encontrado(s)!", "", "critical")
+            for app in found:
+                print(f"      {C.BRIGHT_RED}🔴 {app}{C.RESET}")
+                print(f"        {C.RED}→ PODE ALTERAR VALORES DO JOGO EM TEMPO REAL!{C.RESET}")
+                self.memory_mods_found.append(app)
+                self.dump_data['memory_mods'].append(app)
+                self.dump_data['findings'].append({'type': 'memory_mod', 'package': app})
+        else:
+            print_ok("Nenhum modificador de memoria encontrado")
+
+    def _scan_injector_apps(self):
+        print_category("APPS DE INJECAO DE CODIGO", C.BRIGHT_YELLOW)
+        result = self.run_adb(['shell', 'pm', 'list', 'packages'])
+        if not result or result.returncode != 0:
+            return
+        installed = result.stdout.lower()
+        found = []
+        total_inj = len(INJECTOR_APPS)
+        for idx, app in enumerate(INJECTOR_APPS):
+            if app.lower() in installed:
+                found.append(app)
+        result2 = self.run_adb(['shell', 'find', '/sdcard', '-name', '*injector*'])
+        if result2 and result2.stdout.strip():
+            files = result2.stdout.strip().split('\n')
+            for f in files[:10]:
+                fname = f.split('/')[-1]
+                print_found(f"Arquivo de injecao: {fname}", f"Em: {f}", "critical")
+                self.injector_apps_found.append(f)
+                self.dump_data['injector_apps'].append(f)
+
+        if found:
+            print_found(f"{len(found)} app(s) de injecao encontrado(s)!", "", "critical")
+            for app in found:
+                print(f"      {C.BRIGHT_RED}🔴 {app}{C.RESET}")
+                print(f"        {C.RED}→ PODE INJETAR CODIGO MALICIOSO NO JOGO!{C.RESET}")
+                self.injector_apps_found.append(app)
+                self.dump_data['injector_apps'].append(app)
+                self.dump_data['findings'].append({'type': 'injector_app', 'package': app})
+        elif not self.injector_apps_found:
+            print_ok("Nenhum app de injecao encontrado")
+
+    def _scan_hidden_apps(self):
+        print_category("APPS OCULTOS / MAGISK HIDE", C.BRIGHT_CYAN)
+        result = self.run_adb(['shell', 'pm', 'list', 'packages', '-u'])
+        if result and result.stdout:
+            all_pkgs = result.stdout.lower()
+            hidden = []
+            total_hidden = len(ALL_SUSPECT_APPS)
+            for idx, app in enumerate(ALL_SUSPECT_APPS):
+                if app.lower() not in all_pkgs:
+                    continue
+                result2 = self.run_adb(['shell', 'pm', 'dump', app])
+                if result2 and result2.stdout:
+                    dump = result2.stdout.lower()
+                    if 'hidden' in dump or 'disabled' in dump or 'magisk' in dump:
+                        hidden.append(app)
+
+            if hidden:
+                print_found(f"{len(hidden)} app(s) possivelmente oculto(s)!", "", "critical")
+                for app in hidden:
+                    print(f"      {C.BRIGHT_RED}🔴 {app}{C.RESET}")
+                    print(f"        {C.RED}→ App pode estar sendo ocultado por Magisk Hide ou similar!{C.RESET}")
+                    self.hidden_apps_found.append(app)
+                    self.dump_data['hidden_apps'].append(app)
+                    self.dump_data['findings'].append({'type': 'hidden_app', 'package': app})
+            else:
+                print_ok("Nenhum app oculto detectado")
+        else:
+            print_info("Nao foi possivel verificar apps ocultos")
+
+    def _scan_modified_libs(self, package):
+        print_category("BIBLIOTECAS MODIFICADAS (SO/DLL)", C.BRIGHT_GREEN)
+        lib_paths = [
+            f"/data/data/{package}/lib",
+            f"/data/app/{package}*/lib",
+            f"/data/app/{package}*/base.apk",
+        ]
+        found_mods = []
+        total_libs = len(lib_paths)
+        for idx, lp in enumerate(lib_paths):
+            result = self.run_adb(['shell', 'ls', '-la', lp])
+            if result and result.returncode == 0:
+                files = result.stdout.split('\n')
+                for line in files:
+                    if '.so' in line.lower() or '.dll' in line.lower():
+                        if any(kw in line.lower() for kw in ['cheat', 'hack', 'mod', 'inject', 'hook']):
+                            found_mods.append(line.strip())
+
+        if found_mods:
+            print_found(f"{len(found_mods)} biblioteca(s) suspeita(s)!", "", "critical")
+            for mod in found_mods[:10]:
+                print(f"      {C.BRIGHT_RED}🔴 {mod}{C.RESET}")
+                print(f"        {C.RED}→ Biblioteca modificada/injetada detectada!{C.RESET}")
+                self.modified_libs_found.append(mod)
+                self.dump_data['modified_libs'].append(mod)
+                self.dump_data['findings'].append({'type': 'modified_lib', 'lib': mod})
+        else:
+            print_ok("Nenhuma biblioteca modificada detectada")
+
+    def _scan_suspicious_permissions(self, package):
+        print_category("PERMISSOES SUSPEITAS DETALHADAS", C.BRIGHT_YELLOW)
+        result = self.run_adb(['shell', 'dumpsys', 'package', package])
+        if result and result.stdout:
+            dump = result.stdout.lower()
+            dangerous = [
+                ('system_alert_window', 'Pode sobrepor interface do jogo'),
+                ('write_settings', 'Pode alterar configuracoes do sistema'),
+                ('device_admin', 'Controle total do dispositivo'),
+                ('bind_accessibility_service', 'Pode automatizar acoes'),
+                ('bind_notification_listener_service', 'Pode interceptar notificacoes'),
+                ('request_install_packages', 'Pode instalar apps sem permissao'),
+                ('write_external_storage', 'Acesso total ao armazenamento'),
+                ('read_phone_state', 'Acesso a informacoes do dispositivo'),
+            ]
+            found_perms = []
+            for perm, desc in dangerous:
+                if perm in dump:
+                    found_perms.append((perm, desc))
+
+            if found_perms:
+                print_found(f"{len(found_perms)} permissao(oes) perigosa(s)!", "", "high")
+                for perm, desc in found_perms:
+                    print(f"      {C.YELLOW}⚠️  {perm}{C.RESET}")
+                    print(f"        {C.RED}→ {desc}{C.RESET}")
+                    self.suspicious_permissions.append({'perm': perm, 'desc': desc})
+                    self.dump_data['suspicious_permissions'].append({'perm': perm, 'desc': desc})
+                    self.dump_data['findings'].append({'type': 'suspicious_permission', 'perm': perm})
+            else:
+                print_ok("Permissoes dentro do padrao")
+        else:
+            print_info("Nao foi possivel verificar permissoes")
+
+    def _scan_network_anomalies(self):
+        print_category("ANOMALIAS DE REDE", C.BRIGHT_BLUE)
+        result = self.run_adb(['shell', 'netstat'])
+        if result and result.stdout:
+            connections = result.stdout.lower()
+            suspicious_ports = [
+                ('8080', 'Proxy nao padrao'),
+                ('1080', 'SOCKS proxy'),
+                ('3128', 'Squid proxy'),
+                ('9050', 'Tor proxy'),
+                ('9150', 'Tor browser'),
+                ('7890', 'Clash proxy'),
+                ('7891', 'Clash proxy'),
+                ('8388', 'Shadowsocks'),
+                ('8389', 'Shadowsocks'),
+                ('4433', 'VPN nao padrao'),
+            ]
+            found_ports = []
+            for port, desc in suspicious_ports:
+                if ':' + port in connections or ' ' + port in connections:
+                    found_ports.append((port, desc))
+
+            if found_ports:
+                print_found(f"{len(found_ports)} conexao(oes) suspeita(s)!", "", "high")
+                for port, desc in found_ports:
+                    print(f"      {C.YELLOW}⚠️  Porta {port}{C.RESET}")
+                    print(f"        {C.RED}→ {desc}{C.RESET}")
+                    self.network_anomalies.append({'port': port, 'desc': desc})
+                    self.dump_data['network_anomalies'].append({'port': port, 'desc': desc})
+                    self.dump_data['findings'].append({'type': 'network_anomaly', 'port': port})
+            else:
+                print_ok("Nenhuma anomalia de rede detectada")
+        else:
+            print_info("Nao foi possivel verificar conexoes de rede")
+
+    def _check_wall_of_shame(self):
+        print_category("WALL OF SHAME - APPS BANIDOS CONHECIDOS", C.BRIGHT_YELLOW)
+        banned_signatures = [
+            "com.gameguardian",
+            "com.lucky.patcher",
+            "com.platinmods",
+            "com.chelpus.luckypatcher",
+        ]
+        result = self.run_adb(['shell', 'pm', 'list', 'packages'])
+        if result and result.stdout:
+            installed = result.stdout.lower()
+            found_banned = []
+            for sig in banned_signatures:
+                if sig in installed:
+                    found_banned.append(sig)
+
+            if found_banned:
+                print_found(f"{len(found_banned)} app(s) da WALL OF SHAME encontrado(s)!", "", "critical")
+                for app in found_banned:
+                    print(f"      {C.BRIGHT_RED}🚫 {app}{C.RESET}")
+                    print(f"        {C.RED}→ APP BANIDO/CONHECIDO POR CHEATS!{C.RESET}")
+                    self.wall_of_shame.append(app)
+                    self.dump_data['findings'].append({'type': 'wall_of_shame', 'package': app})
+            else:
+                print_ok("Nenhum app da Wall of Shame encontrado")
+        else:
+            print_info("Nao foi possivel verificar Wall of Shame")
+
+    def _check_dns_settings(self):
+        print_category("CONFIGURACAO DNS", C.BRIGHT_BLUE)
+        print(f"  {C.BRIGHT_GREEN}{C.BOLD}🔄 ANALISANDO CONFIGURACAO DNS...{C.RESET}")
+        print()
+        result = self.run_adb(['shell', 'getprop', 'net.dns1'])
+        if result and result.stdout.strip():
+            dns1 = result.stdout.strip()
+            suspicious_dns = ['8.8.8.8', '1.1.1.1', '9.9.9.9']
+            if dns1 in suspicious_dns:
+                print_info(f"DNS primario: {dns1} (DNS publico)")
+            else:
+                print_info(f"DNS primario: {dns1}")
+        result2 = self.run_adb(['shell', 'getprop', 'net.dns2'])
+        if result2 and result2.stdout.strip():
+            print_info(f"DNS secundario: {result2.stdout.strip()}")
+        result3 = self.run_adb(['shell', 'settings', 'get', 'global', 'private_dns_mode'])
+        if result3 and result3.stdout.strip() not in ['null', '']:
+            mode = result3.stdout.strip()
+            if 'hostname' in mode or 'provider' in mode:
+                print_found(f"DNS privado ativo: {mode}", "Pode mascarar trafego", "warning")
+                self.dns_anomalies.append({'type': 'private_dns', 'value': mode})
+                self.dump_data['dns_anomalies'].append({'type': 'private_dns', 'value': mode})
+            else:
+                print_info(f"Modo DNS privado: {mode}")
+
+    def _scan_hosts_file(self):
+        print_category("ARQUIVO HOSTS MODIFICADO", C.BRIGHT_YELLOW)
+        print(f"  {C.BRIGHT_GREEN}{C.BOLD}🔄 ANALISANDO ARQUIVO HOSTS...{C.RESET}")
+        print()
+        result = self.run_adb(['shell', 'cat', '/system/etc/hosts'])
+        if result and result.stdout:
+            hosts = result.stdout.lower()
+            if 'freefire' in hosts or 'garena' in hosts or 'cheat' in hosts or 'hack' in hosts:
+                print_found("ARQUIVO HOSTS MODIFICADO!", "Pode redirecionar trafego do jogo", "critical")
+                lines = result.stdout.split('\n')
+                for line in lines:
+                    if any(kw in line.lower() for kw in ['freefire', 'garena', 'cheat', 'hack']):
+                        print(f"      {C.BRIGHT_RED}🔴 {line.strip()}{C.RESET}")
+                        self.hosts_modifications.append(line.strip())
+                        self.dump_data['hosts_modifications'].append(line.strip())
+                        self.dump_data['findings'].append({'type': 'hosts_modified', 'line': line.strip()})
+            else:
+                print_ok("Arquivo hosts nao modificado")
+        else:
+            print_info("Nao foi possivel ler arquivo hosts (requer root)")
+
+    def _check_magisk_modules(self):
+        print_category("MODULOS MAGISK", C.BRIGHT_MAGENTA)
+        print(f"  {C.BRIGHT_GREEN}{C.BOLD}🔄 ANALISANDO MODULOS MAGISK...{C.RESET}")
+        print()
+        result = self.run_adb(['shell', 'ls', '/data/adb/modules'])
+        if result and result.returncode == 0:
+            modules = result.stdout.strip().split('\n')
+            suspect_modules = []
+            for mod in modules:
+                if any(kw in mod.lower() for kw in ['hide', 'rootcloak', 'safety', 'cheat', 'hack', 'game', 'ff']):
+                    suspect_modules.append(mod)
+            if suspect_modules:
+                print_found(f"{len(suspect_modules)} modulo(s) Magisk suspeito(s)!", "", "critical")
+                for mod in suspect_modules:
+                    print(f"      {C.BRIGHT_RED}🔴 {mod}{C.RESET}")
+                    print(f"        {C.RED}→ Modulo pode ocultar root ou modificar comportamento do sistema!{C.RESET}")
+                    self.magisk_modules.append(mod)
+                    self.dump_data['magisk_modules'].append(mod)
+                    self.dump_data['findings'].append({'type': 'magisk_module', 'module': mod})
+            else:
+                print_ok(f"{len(modules)} modulo(s) Magisk, nenhum suspeito")
+        else:
+            print_info("Nenhum modulo Magisk encontrado ou acesso negado")
+
+    def _scan_telegram_cheats(self):
+        print_category("TELEGRAM / CANAIS DE CHEAT", C.BRIGHT_CYAN)
+        print(f"  {C.BRIGHT_GREEN}{C.BOLD}🔄 ANALISANDO TELEGRAM...{C.RESET}")
+        print()
+        telegram_paths = [
+            "/sdcard/Android/data/org.telegram.messenger",
+            "/sdcard/Android/data/org.telegram.messenger.web",
+            "/sdcard/Telegram",
+            "/data/data/org.telegram.messenger",
+        ]
+        found_telegram = False
+        cheat_channels = []
+        total_tg = len(telegram_paths)
+        for idx, tp in enumerate(telegram_paths):
+            result = self.run_adb(['shell', 'ls', '-la', tp])
+            if result and result.returncode == 0:
+                found_telegram = True
+                result2 = self.run_adb(['shell', 'find', tp, '-name', '*freefire*', '-o', '-name', '*cheat*', '-o', '-name', '*hack*', '-o', '-name', '*mod*'])
+                if result2 and result2.stdout.strip():
+                    files = result2.stdout.strip().split('\n')
+                    for f in files[:15]:
+                        fname = f.split('/')[-1]
+                        cheat_channels.append(fname)
+                        print_found(f"Arquivo suspeito no Telegram: {fname}", f"Em: {f}", "high")
+                        self.telegram_cheats.append(f)
+                        self.dump_data['telegram_cheats'].append(f)
+                        self.dump_data['findings'].append({'type': 'telegram_cheat', 'file': f})
+        if not found_telegram:
+            print_ok("Telegram nao encontrado no dispositivo")
+        elif not cheat_channels:
+            print_ok("Telegram encontrado mas sem arquivos suspeitos")
+
+    def _check_floating_windows(self):
+        print_category("JANELAS FLUTUANTES / OVERLAYS", C.BRIGHT_YELLOW)
+        print(f"  {C.BRIGHT_GREEN}{C.BOLD}🔄 ANALISANDO JANELAS FLUTUANTES...{C.RESET}")
+        print()
+        result = self.run_adb(['shell', 'dumpsys', 'window', 'windows'])
+        if result and result.stdout:
+            windows = result.stdout.lower()
+            if 'overlay' in windows or 'floating' in windows:
+                lines = result.stdout.split('\n')
+                overlays = []
+                for line in lines:
+                    if 'overlay' in line.lower() or 'floating' in line.lower():
+                        if any(kw in line.lower() for kw in ['game', 'cheat', 'hack', 'mod', 'menu', 'ff']):
+                            overlays.append(line.strip()[:80])
+                if overlays:
+                    print_found(f"{len(overlays)} overlay(s) suspeito(s)!", "", "critical")
+                    for ov in overlays[:10]:
+                        print(f"      {C.BRIGHT_RED}🔴 {ov}{C.RESET}")
+                        print(f"        {C.RED}→ Overlay pode ser menu de cheat!{C.RESET}")
+                        self.floating_windows.append(ov)
+                        self.dump_data['floating_windows'].append(ov)
+                        self.dump_data['findings'].append({'type': 'floating_window', 'window': ov})
+                else:
+                    print_ok("Overlays detectados mas nenhum suspeito")
+            else:
+                print_ok("Nenhuma janela flutuante suspeita")
+        else:
+            print_info("Nao foi possivel verificar janelas")
+
+    def _scan_clipboard_cheats(self):
+        print_category("CLIPBOARD / AREA DE TRANSFERENCIA", C.BRIGHT_GREEN)
+        print(f"  {C.BRIGHT_GREEN}{C.BOLD}🔄 ANALISANDO CLIPBOARD...{C.RESET}")
+        print()
+        result = self.run_adb(['shell', 'dumpsys', 'clipboard'])
+        if result and result.stdout:
+            clipboard = result.stdout.lower()
+            if any(kw in clipboard for kw in ['freefire', 'cheat', 'hack', 'mod', 'script', 'lua', 'panel', 'headtrick']):
+                print_found("CONTEUDO SUSPEITO NA AREA DE TRANSFERENCIA!", "", "critical")
+                lines = result.stdout.split('\n')
+                for line in lines:
+                    if any(kw in line.lower() for kw in ['freefire', 'cheat', 'hack', 'mod', 'script', 'lua', 'panel', 'headtrick']):
+                        print(f"      {C.BRIGHT_RED}🔴 {line.strip()[:80]}{C.RESET}")
+                        self.clipboard_cheats.append(line.strip()[:80])
+                        self.dump_data['clipboard_cheats'].append(line.strip()[:80])
+                        self.dump_data['findings'].append({'type': 'clipboard_cheat', 'content': line.strip()[:80]})
+            else:
+                print_ok("Clipboard limpo")
+        else:
+            print_info("Nao foi possivel verificar clipboard")
+
+    # ============================================================
+    #  SECAO 8: RELATORIO E DUMP COM W.O DETECTOR
+    # ============================================================
+
+    def save_dump(self):
+        clear()
+        print_header("SALVAR DUMP")
+        if not self.dump_data.get('findings'):
+            print_error("Nenhum dado para salvar. Escaneie primeiro!")
+            pause()
+            return
+        filename = f"dump_ff_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        try:
+            with open(filename, 'w', encoding='utf-8') as f:
+                json.dump(self.dump_data, f, indent=2, ensure_ascii=False)
+            print_found("Dump salvo com sucesso!", "", "high")
+            print(f"  {C.CYAN}Arquivo: {filename}{C.RESET}")
+            print(f"  {C.CYAN}Local: {os.path.abspath(filename)}{C.RESET}")
+            print(f"  {C.CYAN}Findings: {len(self.dump_data['findings'])}{C.RESET}")
+            print(f"  {C.CYAN}Apps ZArchiver: {len(self.dump_data.get('zarchiver_apps', []))}{C.RESET}")
+            print(f"  {C.CYAN}Apps Chrome: {len(self.dump_data.get('chrome_apps', []))}{C.RESET}")
+            print(f"  {C.CYAN}Dominios: {len(self.dump_data.get('domains_found', []))}{C.RESET}")
+            print(f"  {C.CYAN}Script Apps: {len(self.dump_data.get('script_apps', []))}{C.RESET}")
+            print(f"  {C.CYAN}Memory Mods: {len(self.dump_data.get('memory_mods', []))}{C.RESET}")
+            print(f"  {C.CYAN}Injector Apps: {len(self.dump_data.get('injector_apps', []))}{C.RESET}")
+        except Exception as e:
+            print_error(f"Erro ao salvar dump: {e}")
+        pause()
+
+    def _calculate_wo_score(self):
+        """Calcula a pontuacao de risco para W.O"""
+        score = 0
+        max_score = 100
+
+        # ROOT (peso alto)
+        if self.has_root:
+            score += 15
+
+        # Apps suspeitos encontrados
+        score += len(self.suspects_found) * 2
+
+        # Warnings
+        score += len(self.warnings) * 3
+
+        # Dominios suspeitos (peso muito alto)
+        score += len(self.domains_found) * 4
+
+        # Script apps
+        score += len(self.script_apps_found) * 3
+
+        # Memory mods (peso critico)
+        score += len(self.memory_mods_found) * 5
+
+        # Injector apps (peso critico)
+        score += len(self.injector_apps_found) * 5
+
+        # Apps ocultos
+        score += len(self.hidden_apps_found) * 4
+
+        # Bibliotecas modificadas
+        score += len(self.modified_libs_found) * 4
+
+        # Permissoes suspeitas
+        score += len(self.suspicious_permissions) * 2
+
+        # Anomalias de rede
+        score += len(self.network_anomalies) * 2
+
+        # Wall of shame
+        score += len(self.wall_of_shame) * 5
+
+        # Telegram cheats
+        score += len(self.telegram_cheats) * 3
+
+        # Floating windows
+        score += len(self.floating_windows) * 4
+
+        # Clipboard cheats
+        score += len(self.clipboard_cheats) * 3
+
+        # DNS anomalies
+        score += len(self.dns_anomalies) * 2
+
+        # Hosts modifications
+        score += len(self.hosts_modifications) * 4
+
+        # Magisk modules
+        score += len(self.magisk_modules) * 3
+
+        # ZArchiver apps
+        score += len(self.zarchiver_apps) * 1
+
+        # Chrome apps
+        score += len(self.chrome_apps) * 1
+
+        # Limitar a 100
+        percentage = min(score, max_score)
+        return percentage
+
+    def _report(self, name):
+        # Calcular score W.O
+        wo_percentage = self._calculate_wo_score()
+        self.dump_data['wo_percentage'] = wo_percentage
+
+        print()
+        print(C.BRIGHT_CYAN + "═" * 52 + C.RESET)
+        print(C.BRIGHT_CYAN + C.BOLD + "           📊  R E L A T O R I O   F I N A L  📊" + C.RESET)
+        print(C.BRIGHT_CYAN + "═" * 52 + C.RESET)
+        print()
+        print(f"  {C.WHITE}Jogo:{C.RESET}      {C.BRIGHT_CYAN}{name}{C.RESET}")
+        print(f"  {C.WHITE}Data:{C.RESET}      {C.BRIGHT_WHITE}{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}{C.RESET}")
+        print(f"  {C.WHITE}Disp:{C.RESET}      {C.BRIGHT_WHITE}{self.device_serial or 'N/A'}{C.RESET}")
+        print(f"  {C.WHITE}Root:{C.RESET}      {C.BRIGHT_RED if self.has_root else C.GREEN}{'SIM' if self.has_root else 'NAO'}{C.RESET}")
+        print()
+
+        # Alertas
+        print(f"  {C.BRIGHT_YELLOW}{C.BOLD}⚠️  ALERTAS ({len(self.warnings)}):{C.RESET}")
+        if self.warnings:
+            for w in self.warnings:
+                print(f"     {C.RED}• {w}{C.RESET}")
+        else:
+            print(f"     {C.GREEN}Nenhum alerta{C.RESET}")
+
+        # DOMINIOS SUSPEITOS (NOVO - substitui Itens Suspeitos)
+        print()
+        print(f"  {C.BRIGHT_RED}{C.BOLD}🌐 DOMINIOS SUSPEITOS ({len(self.domains_found)}):{C.RESET}")
+        if self.domains_found:
+            for d in self.domains_found[:25]:
+                domain = d.get('domain', '?')
+                source = d.get('source', 'desconhecido')
+                browser = d.get('browser', '')
+                file_ref = d.get('file', d.get('context', ''))[:40]
+                print(f"     {C.BRIGHT_RED}[DOM]{C.RESET} {domain}")
+                print(f"           {C.YELLOW}→ Fonte: {source}{C.RESET}")
+                if browser:
+                    print(f"           {C.YELLOW}→ Browser: {browser}{C.RESET}")
+                if file_ref:
+                    print(f"           {C.YELLOW}→ Ref: {file_ref}{C.RESET}")
+            if len(self.domains_found) > 25:
+                print(f"     {C.YELLOW}... e mais {len(self.domains_found) - 25} dominios{C.RESET}")
+        else:
+            print(f"     {C.GREEN}Nenhum dominio suspeito{C.RESET}")
+
+        # Apps de Script
+        print()
+        print(f"  {C.BRIGHT_YELLOW}{C.BOLD}📜 APPS DE SCRIPT ({len(self.script_apps_found)}):{C.RESET}")
+        if self.script_apps_found:
+            for app in self.script_apps_found[:15]:
+                print(f"     {C.YELLOW}• {app}{C.RESET}")
+            if len(self.script_apps_found) > 15:
+                print(f"     {C.DIM}... e mais {len(self.script_apps_found) - 15}{C.RESET}")
+        else:
+            print(f"     {C.GREEN}Nenhum app de script{C.RESET}")
+
+        # Modificadores de Memoria
+        print()
+        print(f"  {C.BRIGHT_MAGENTA}{C.BOLD}🧠 MODIFICADORES DE MEMORIA ({len(self.memory_mods_found)}):{C.RESET}")
+        if self.memory_mods_found:
+            for app in self.memory_mods_found[:15]:
+                print(f"     {C.MAGENTA}• {app}{C.RESET}")
+            if len(self.memory_mods_found) > 15:
+                print(f"     {C.DIM}... e mais {len(self.memory_mods_found) - 15}{C.RESET}")
+        else:
+            print(f"     {C.GREEN}Nenhum modificador de memoria{C.RESET}")
+
+        # Apps de Injecao
+        print()
+        print(f"  {C.BRIGHT_RED}{C.BOLD}💉 APPS DE INJECAO ({len(self.injector_apps_found)}):{C.RESET}")
+        if self.injector_apps_found:
+            for app in self.injector_apps_found[:15]:
+                print(f"     {C.RED}• {app}{C.RESET}")
+            if len(self.injector_apps_found) > 15:
+                print(f"     {C.DIM}... e mais {len(self.injector_apps_found) - 15}{C.RESET}")
+        else:
+            print(f"     {C.GREEN}Nenhum app de injecao{C.RESET}")
+
+        # Apps Ocultos
+        print()
+        print(f"  {C.BRIGHT_CYAN}{C.BOLD}👻 APPS OCULTOS ({len(self.hidden_apps_found)}):{C.RESET}")
+        if self.hidden_apps_found:
+            for app in self.hidden_apps_found[:15]:
+                print(f"     {C.CYAN}• {app}{C.RESET}")
+            if len(self.hidden_apps_found) > 15:
+                print(f"     {C.DIM}... e mais {len(self.hidden_apps_found) - 15}{C.RESET}")
+        else:
+            print(f"     {C.GREEN}Nenhum app oculto{C.RESET}")
+
+        # Bibliotecas Modificadas
+        print()
+        print(f"  {C.BRIGHT_GREEN}{C.BOLD}📚 BIBLIOTECAS MODIFICADAS ({len(self.modified_libs_found)}):{C.RESET}")
+        if self.modified_libs_found:
+            for lib in self.modified_libs_found[:15]:
+                print(f"     {C.GREEN}• {lib}{C.RESET}")
+            if len(self.modified_libs_found) > 15:
+                print(f"     {C.DIM}... e mais {len(self.modified_libs_found) - 15}{C.RESET}")
+        else:
+            print(f"     {C.GREEN}Nenhuma biblioteca modificada{C.RESET}")
+
+        # Permissoes Suspeitas
+        print()
+        print(f"  {C.BRIGHT_YELLOW}{C.BOLD}🔐 PERMISSOES SUSPEITAS ({len(self.suspicious_permissions)}):{C.RESET}")
+        if self.suspicious_permissions:
+            for p in self.suspicious_permissions[:15]:
+                print(f"     {C.YELLOW}• {p['perm']}{C.RESET}")
+                print(f"           {C.DIM}→ {p['desc']}{C.RESET}")
+            if len(self.suspicious_permissions) > 15:
+                print(f"     {C.DIM}... e mais {len(self.suspicious_permissions) - 15}{C.RESET}")
+        else:
+            print(f"     {C.GREEN}Nenhuma permissao suspeita{C.RESET}")
+
+        # Anomalias de Rede
+        print()
+        print(f"  {C.BRIGHT_BLUE}{C.BOLD}🌐 ANOMALIAS DE REDE ({len(self.network_anomalies)}):{C.RESET}")
+        if self.network_anomalies:
+            for na in self.network_anomalies[:15]:
+                print(f"     {C.BLUE}• Porta {na['port']}{C.RESET}")
+                print(f"           {C.DIM}→ {na['desc']}{C.RESET}")
+            if len(self.network_anomalies) > 15:
+                print(f"     {C.DIM}... e mais {len(self.network_anomalies) - 15}{C.RESET}")
+        else:
+            print(f"     {C.GREEN}Nenhuma anomalia de rede{C.RESET}")
+
+        # Wall of Shame
+        print()
+        print(f"  {C.BRIGHT_RED}{C.BOLD}🚫 WALL OF SHAME ({len(self.wall_of_shame)}):{C.RESET}")
+        if self.wall_of_shame:
+            for app in self.wall_of_shame[:15]:
+                print(f"     {C.BRIGHT_RED}• {app}{C.RESET}")
+            if len(self.wall_of_shame) > 15:
+                print(f"     {C.DIM}... e mais {len(self.wall_of_shame) - 15}{C.RESET}")
+        else:
+            print(f"     {C.GREEN}Nenhum app na Wall of Shame{C.RESET}")
+
+        # Telegram
+        print()
+        print(f"  {C.BRIGHT_CYAN}{C.BOLD}📱 TELEGRAM / CANAIS DE CHEAT ({len(self.telegram_cheats)}):{C.RESET}")
+        if self.telegram_cheats:
+            for f in self.telegram_cheats[:15]:
+                print(f"     {C.CYAN}• {f}{C.RESET}")
+            if len(self.telegram_cheats) > 15:
+                print(f"     {C.DIM}... e mais {len(self.telegram_cheats) - 15}{C.RESET}")
+        else:
+            print(f"     {C.GREEN}Nenhum cheat no Telegram{C.RESET}")
+
+        # Floating Windows
+        print()
+        print(f"  {C.BRIGHT_YELLOW}{C.BOLD}🪟 JANELAS FLUTUANTES ({len(self.floating_windows)}):{C.RESET}")
+        if self.floating_windows:
+            for fw in self.floating_windows[:15]:
+                print(f"     {C.YELLOW}• {fw}{C.RESET}")
+            if len(self.floating_windows) > 15:
+                print(f"     {C.DIM}... e mais {len(self.floating_windows) - 15}{C.RESET}")
+        else:
+            print(f"     {C.GREEN}Nenhuma janela flutuante suspeita{C.RESET}")
+
+        # Clipboard
+        print()
+        print(f"  {C.BRIGHT_GREEN}{C.BOLD}📋 CLIPBOARD SUSPEITO ({len(self.clipboard_cheats)}):{C.RESET}")
+        if self.clipboard_cheats:
+            for c in self.clipboard_cheats[:15]:
+                print(f"     {C.GREEN}• {c}{C.RESET}")
+            if len(self.clipboard_cheats) > 15:
+                print(f"     {C.DIM}... e mais {len(self.clipboard_cheats) - 15}{C.RESET}")
+        else:
+            print(f"     {C.GREEN}Clipboard limpo{C.RESET}")
+
+        # DNS
+        print()
+        print(f"  {C.BRIGHT_BLUE}{C.BOLD}🔧 DNS ANOMALIAS ({len(self.dns_anomalies)}):{C.RESET}")
+        if self.dns_anomalies:
+            for d in self.dns_anomalies[:15]:
+                print(f"     {C.BLUE}• {d['type']}: {d['value']}{C.RESET}")
+            if len(self.dns_anomalies) > 15:
+                print(f"     {C.DIM}... e mais {len(self.dns_anomalies) - 15}{C.RESET}")
+        else:
+            print(f"     {C.GREEN}DNS normal{C.RESET}")
+
+        # Hosts
+        print()
+        print(f"  {C.BRIGHT_RED}{C.BOLD}📝 HOSTS MODIFICADO ({len(self.hosts_modifications)}):{C.RESET}")
+        if self.hosts_modifications:
+            for h in self.hosts_modifications[:15]:
+                print(f"     {C.RED}• {h}{C.RESET}")
+            if len(self.hosts_modifications) > 15:
+                print(f"     {C.DIM}... e mais {len(self.hosts_modifications) - 15}{C.RESET}")
+        else:
+            print(f"     {C.GREEN}Arquivo hosts nao modificado{C.RESET}")
+
+        # Magisk Modules
+        print()
+        print(f"  {C.BRIGHT_MAGENTA}{C.BOLD}🔮 MODULOS MAGISK ({len(self.magisk_modules)}):{C.RESET}")
+        if self.magisk_modules:
+            for m in self.magisk_modules[:15]:
+                print(f"     {C.MAGENTA}• {m}{C.RESET}")
+            if len(self.magisk_modules) > 15:
+                print(f"     {C.DIM}... e mais {len(self.magisk_modules) - 15}{C.RESET}")
+        else:
+            print(f"     {C.GREEN}Nenhum modulo Magisk suspeito{C.RESET}")
+
+        # Arquivos do Sistema Suspeitos
+        print()
+        print(f"  {C.BRIGHT_RED}{C.BOLD}📁 ARQUIVOS DO SISTEMA SUSPEITOS:{C.RESET}")
+        system_files = [f for f in self.suspects_found if f.get('type') == 'system_suspect_file']
+        if system_files:
+            print_found(f"{len(system_files)} arquivo(s) encontrado(s)!", "", "critical")
+            for sf in system_files[:20]:
+                print(f"     {C.BRIGHT_RED}🔴 {sf.get('name', sf.get('path', ''))}{C.RESET}")
+                print(f"           {C.YELLOW}→ {sf.get('path', '')}{C.RESET}")
+                print(f"           {C.YELLOW}→ Keyword: '{sf.get('keyword', '')}'{C.RESET}")
+            if len(system_files) > 20:
+                print(f"     {C.DIM}... e mais {len(system_files) - 20}{C.RESET}")
+        else:
+            print(f"     {C.GREEN}Nenhum arquivo suspeito no sistema{C.RESET}")
+
+        # Apps ZArchiver
+        print()
+        print(f"  {C.BRIGHT_MAGENTA}{C.BOLD}📦 APPS ZARCHIVER ({len(self.zarchiver_apps)}):{C.RESET}")
+        if self.zarchiver_apps:
+            for app in self.zarchiver_apps[:15]:
+                print(f"     {C.MAGENTA}• {app}{C.RESET}")
+            if len(self.zarchiver_apps) > 15:
+                print(f"     {C.DIM}... e mais {len(self.zarchiver_apps) - 15}{C.RESET}")
+        else:
+            print(f"     {C.DIM}Nenhum app encontrado{C.RESET}")
+
+        # Apps Chrome
+        print()
+        print(f"  {C.BRIGHT_BLUE}{C.BOLD}🌐 APPS CHROME ({len(self.chrome_apps)}):{C.RESET}")
+        if self.chrome_apps:
+            for app in self.chrome_apps[:15]:
+                print(f"     {C.BLUE}• {app}{C.RESET}")
+            if len(self.chrome_apps) > 15:
+                print(f"     {C.DIM}... e mais {len(self.chrome_apps) - 15}{C.RESET}")
+        else:
+            print(f"     {C.DIM}Nenhum app encontrado{C.RESET}")
+
+        print()
+        print(C.BRIGHT_CYAN + "═" * 52 + C.RESET)
+
+        # ============================================================
+        #  W.O VEREDICTO (NOVO - SEMPRE NO FINAL)
+        # ============================================================
+        print()
+        print(C.BG_RED + C.BRIGHT_WHITE + C.BOLD + " " * 10 + "W.O OU NAO?" + " " * 10 + C.RESET)
+        print()
+
+        # Barra de progresso
+        bar_length = 40
+        filled = int(bar_length * wo_percentage / 100)
+        empty = bar_length - filled
+
+        if wo_percentage >= 70:
+            bar_color = C.BRIGHT_RED
+            bar_fill = "█"
+        elif wo_percentage >= 40:
+            bar_color = C.BRIGHT_YELLOW
+            bar_fill = "█"
+        else:
+            bar_color = C.BRIGHT_GREEN
+            bar_fill = "█"
+
+        bar = bar_color + bar_fill * filled + C.DIM + "░" * empty + C.RESET
+        print(f"  {C.WHITE}Probabilidade de Cheat:{C.RESET}")
+        print(f"  [{bar}] {wo_percentage}%")
+        print()
+
+        # Veredicto
+        if wo_percentage >= 70:
+            self.dump_data['wo_verdict'] = "W.O CONFIRMADO"
+            print(C.BRIGHT_RED + C.BOLD + "           🔴  V E R E D I C T O:  W . O   C O N F I R M A D O" + C.RESET)
+            print(C.BRIGHT_RED + "           PROBABILIDADE DE CHEAT: " + str(wo_percentage) + "%" + C.RESET)
+            print(C.BRIGHT_RED + "           MULTIPLAS ANOMALIAS CRITICAS DETECTADAS!" + C.RESET)
+            print(C.BRIGHT_RED + "           Fortes indicios de uso de cheats/modificacoes!" + C.RESET)
+            print(C.BRIGHT_RED + "           RECOMENDACAO: BANIR / W.O IMEDIATO" + C.RESET)
+
+        elif wo_percentage >= 50:
+            self.dump_data['wo_verdict'] = "ANALISE NECESSARIA"
+            print(C.BRIGHT_YELLOW + C.BOLD + "           🟡  V E R E D I C T O:  A N A L I S E   N E C E S S A R I A" + C.RESET)
+            print(C.BRIGHT_YELLOW + "           PROBABILIDADE DE CHEAT: " + str(wo_percentage) + "%" + C.RESET)
+            print(C.BRIGHT_YELLOW + "           ANOMALIAS DETECTADAS MAS NAO CONCLUSIVAS." + C.RESET)
+            print()
+            print(C.BG_YELLOW + C.BLACK + C.BOLD + "  ⚠️  MENSAGEM PARA O ANALISTA:" + C.RESET)
+            print(C.BRIGHT_YELLOW + C.BOLD + "  A porcentagem esta em " + str(wo_percentage) + "% - ZONA DE INCERTEZA!" + C.RESET)
+            print(C.BRIGHT_YELLOW + "  → Continue a analise manualmente" + C.RESET)
+            print(C.BRIGHT_YELLOW + "  → Verifique logs detalhados do dispositivo" + C.RESET)
+            print(C.BRIGHT_YELLOW + "  → Analise o comportamento do jogador em partidas" + C.RESET)
+            print(C.BRIGHT_YELLOW + "  → Verifique historico de bans anteriores" + C.RESET)
+            print(C.BRIGHT_YELLOW + "  → Considere analisar capturas de tela do dispositivo" + C.RESET)
+            print(C.BRIGHT_YELLOW + "  → Verifique se ha overlays ativos durante o jogo" + C.RESET)
+            print(C.BRIGHT_YELLOW + "  → Analise o desempenho suspeito em replays" + C.RESET)
+            print()
+            print(C.BRIGHT_YELLOW + "  RECOMENDACAO: INVESTIGACAO ADICIONAL ANTES DE DECISAO FINAL" + C.RESET)
+
+        elif wo_percentage >= 30:
+            self.dump_data['wo_verdict'] = "SUSPEITO"
+            print(C.YELLOW + C.BOLD + "           🟡  V E R E D I C T O:  S U S P E I T O" + C.RESET)
+            print(C.YELLOW + "           PROBABILIDADE DE CHEAT: " + str(wo_percentage) + "%" + C.RESET)
+            print(C.YELLOW + "           Algumas anomalias detectadas." + C.RESET)
+            print(C.YELLOW + "           Investigação adicional recomendada." + C.RESET)
+
+        else:
+            self.dump_data['wo_verdict'] = "LIMPO"
+            print(C.GREEN + C.BOLD + "           🟢  V E R E D I C T O:  L I M P O" + C.RESET)
+            print(C.GREEN + "           PROBABILIDADE DE CHEAT: " + str(wo_percentage) + "%" + C.RESET)
+            print(C.GREEN + "           Poucos ou nenhum sinal de modificacao." + C.RESET)
+            print(C.GREEN + "           Dispositivo parece limpo." + C.RESET)
+
+        print()
+        print(C.BRIGHT_CYAN + "═" * 52 + C.RESET)
+        print()
+        print(f"  {C.DIM}⚠️  AVISO: Este scanner nao e 100% preciso.{C.RESET}")
+        print(f"  {C.DIM}   Cheats avancados podem nao deixar rastros visiveis.{C.RESET}")
+        print(f"  {C.DIM}   Analise manual adicional pode ser necessaria.{C.RESET}")
+        print()
+        pause()
+
+
+# ============================================================
+#  SECAO 9: LOOP PRINCIPAL
+# ============================================================
+    def main(self):
+        while True:
+            self.show_dragon()
+            print_header("FireDragon Scanner v4.0")
+            self.show_main_menu()
+            try:
+                choice = input().strip().lower()
+            except (EOFError, KeyboardInterrupt):
+                print()
+                break
+            if choice == '0':
+                self.pair_device()
+            elif choice == '1':
+                if self.device_connected:
+                    self.scan_ff(FF_PACKAGE, "FreeFire Normal")
+                else:
+                    print(f"\n  {C.RED}✗ Pareie um dispositivo primeiro!{C.RESET}")
+                    time.sleep(1.5)
+            elif choice == '2':
+                if self.device_connected:
+                    self.scan_ff(FF_PACKAGE_MAX, "FreeFire Max")
+                else:
+                    print(f"\n  {C.RED}✗ Pareie um dispositivo primeiro!{C.RESET}")
+                    time.sleep(1.5)
+            elif choice == '3':
+                if self.device_connected:
+                    self.save_dump()
+                else:
+                    print(f"\n  {C.RED}✗ Pareie um dispositivo primeiro!{C.RESET}")
+                    time.sleep(1.5)
+            elif choice == 's':
+                clear()
+                print()
+                print_header("Obrigado por usar o FireDragon Scanner v4.0!")
+                print()
+                break
+            else:
+                print(f"\n  {C.RED}✗ Opcao invalida!{C.RESET}")
+                time.sleep(1)
+
+
+# ============================================================
+#  SECAO 10: INICIALIZACAO
+# ============================================================
+if __name__ == "__main__":
+    try:
+        scanner = FireDragonScanner()
+        scanner.main()
+    except KeyboardInterrupt:
+        clear()
+        print()
+        print_header("Scanner encerrado pelo usuario.")
+        print()
+    except Exception as e:
+        clear()
+        print()
+        print_header(f"ERRO: {str(e)[:40]}")
+        print()
